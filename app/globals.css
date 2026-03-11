@@ -1,0 +1,60 @@
+@import "tailwindcss";
+
+:root {
+  --background: #0b1220;
+  --foreground: #e5e7eb;
+  --panel: #111827;
+  --border: #1f2937;
+  --primary: #137fec;
+
+  /* Font sizes - default */
+  --font-size-base: 14px;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-panel: var(--panel);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+}
+
+html {
+  font-size: var(--font-size-base);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem; /* Relative to html font-size */
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* Mono font for text areas */
+.mono-font {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Textarea and output font size */
+textarea, .text-content {
+  font-size: 1rem;
+}
