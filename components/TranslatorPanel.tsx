@@ -594,7 +594,7 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
       </section>
 
       {/* Translation Panels */}
-      <section className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden">
+      <section className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden min-h-0">
         {/* Source Input Panel */}
         <div className="flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[10px] relative overflow-hidden group">
           <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--background)]/30">

@@ -49,7 +49,7 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
+      <main className="flex-1 flex flex-col p-4 gap-4 overflow-hidden min-h-0">
         <TranslatorPanel />
       </main>
 
