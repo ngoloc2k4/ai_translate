@@ -68,4 +68,3 @@ Thumbs.db
 *.key
 *.crt
 *.pem
-!node_modules/

@@ -78,5 +78,5 @@ export const TEMPERATURE_PRESETS: Record<string, number> = {
 export const MAX_CHARACTERS = 5000
 
 export const FONT_SIZE_MIN = 10
-export const FONT_SIZE_MAX = 20
+export const FONT_SIZE_MAX = 24
 export const FONT_SIZE_STEP = 2

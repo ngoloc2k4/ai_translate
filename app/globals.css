@@ -54,7 +54,7 @@ body {
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Textarea and output font size */
-textarea, .text-content {
-  font-size: 1rem;
+/* Textarea and output use inline styles for dynamic font-size */
+.text-content {
+  line-height: 1.625;
 }

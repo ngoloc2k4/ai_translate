@@ -147,14 +147,14 @@ export default function HistoryPage() {
     <div className="flex-1 flex flex-col p-4 overflow-hidden">
       {/* Header with Back Button */}
       <div className="flex items-center gap-3 mb-4">
-        <a
-          href="/"
+        <button
+          onClick={() => window.location.href = '/'}
           className="p-2 rounded-[10px] bg-[var(--panel)] border border-[var(--border)] text-zinc-400 hover:text-white hover:border-zinc-600 transition-all"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-        </a>
+        </button>
         <h2 className="text-lg font-bold text-white">{t("todaysHistory")}</h2>
       </div>
       {historyItems.length > 0 && (

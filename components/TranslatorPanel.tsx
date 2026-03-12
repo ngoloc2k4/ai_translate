@@ -15,10 +15,13 @@ interface TranslatorPanelProps {
 
 export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps) {
   const { t, locale, setLocale } = useI18n()
-  const { result, loading, error, translate, stop, reset } = useTranslation()
+  const { result, loading, error, translate, reset } = useTranslation()
 
   const [apiKeys, setApiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
-  const [fontSize, setFontSize] = useState<number>(14)
+  const [fontSize, setFontSize] = useState<number>(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem("ai_translate_font_size") : null
+    return saved ? Number(saved) : 14
+  })
   const [savedProvider, setSavedProvider] = useLocalStorage<"gemini" | "groq" | "nvidia" | "openrouter" | "custom">("ai_translate_provider", "gemini")
   const [savedModel, setSavedModel] = useLocalStorage<string>("ai_translate_model", "gemini-2.5-flash")
   const [mounted, setMounted] = useState(false)
@@ -36,10 +39,6 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
   // Load font size from localStorage after mount
   useEffect(() => {
     setMounted(true)
-    const savedFontSize = localStorage.getItem("ai_translate_font_size")
-    if (savedFontSize) {
-      setFontSize(Number(savedFontSize))
-    }
   }, [])
 
   // Apply font size
@@ -48,6 +47,13 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
       document.documentElement.style.setProperty('--font-size-base', `${fontSize}px`)
     }
   }, [fontSize, mounted])
+
+  // Listen for open-settings event from header button
+  useEffect(() => {
+    const handleOpenSettings = () => setShowSettings(true)
+    window.addEventListener("open-settings", handleOpenSettings)
+    return () => window.removeEventListener("open-settings", handleOpenSettings)
+  }, [])
 
   // Update stats
   useEffect(() => {
@@ -614,7 +620,7 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
             placeholder={t("sourcePlaceholder")}
             maxLength={MAX_CHARACTERS}
             style={{ fontSize: mounted ? `${fontSize}px` : '14px' }}
-            className="flex-1 w-full bg-transparent p-5 text-sm leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 border-none resize-none placeholder:text-zinc-700 custom-scrollbar mono-font"
+            className="flex-1 w-full bg-transparent p-5 leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 border-none resize-none placeholder:text-zinc-700 custom-scrollbar mono-font"
           />
           <div className="absolute bottom-3 right-3">
             <div className={`px-2 py-1 rounded-[10px] bg-[var(--background)] border border-[var(--border)] text-[10px] font-mono ${
@@ -652,13 +658,13 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
           </div>
           <div className="flex-1 p-5 overflow-y-auto custom-scrollbar text-content" style={{ fontSize: mounted ? `${fontSize}px` : '14px' }}>
             {loading && !result && (
-              <div className="flex items-center gap-2 text-zinc-500">
+              <div className="flex items-center gap-2 text-zinc-500" style={{ fontSize: 'inherit' }}>
                 <div className="w-4 h-4 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
                 <span>{t("translating")}</span>
               </div>
             )}
             {result && (
-              <div className="text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
+              <div className="leading-relaxed text-zinc-300 whitespace-pre-wrap" style={{ fontSize: 'inherit' }}>
                 {result}
                 {loading && (
                   <span className="inline-block w-1.5 h-4 bg-[var(--primary)]/40 animate-pulse ml-0.5 align-middle"></span>
@@ -666,10 +672,10 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
               </div>
             )}
             {!result && !loading && (
-              <p className="text-zinc-500 text-sm">{t("outputPlaceholder")}</p>
+              <p className="text-zinc-500" style={{ fontSize: 'inherit' }}>{t("outputPlaceholder")}</p>
             )}
             {error && (
-              <p className="text-red-500 text-sm">{t("translationError")}{error}</p>
+              <p className="text-red-500" style={{ fontSize: 'inherit' }}>{t("translationError")}{error}</p>
             )}
           </div>
           {loading && result && (
@@ -684,18 +690,24 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden flex justify-around items-center px-6 py-3 border-t border-[var(--border)] bg-[var(--background)]/80 backdrop-blur-md">
-        <a href="/" className="flex flex-col items-center gap-1 text-[var(--primary)]">
+        <button
+          onClick={() => window.location.href = '/'}
+          className="flex flex-col items-center gap-1 text-[var(--primary)]"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
           </svg>
           <span className="text-[10px] font-bold">{t("navTranslate")}</span>
-        </a>
-        <a href="/history" className="flex flex-col items-center gap-1 text-zinc-400">
+        </button>
+        <button
+          onClick={() => window.location.href = '/history'}
+          className="flex flex-col items-center gap-1 text-zinc-400"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <span className="text-[10px] font-bold">{t("navHistory")}</span>
-        </a>
+        </button>
         <button
           onClick={() => setShowSettings(true)}
           className="flex flex-col items-center gap-1 text-zinc-400"
