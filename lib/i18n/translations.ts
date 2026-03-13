@@ -26,6 +26,7 @@ export const translations = {
     
     // Actions
     translate: "DỊCH",
+    cancel: "HỦY",
     stop: "Dừng",
     copy: "Sao chép",
     clear: "Xóa",
@@ -137,6 +138,7 @@ export const translations = {
     
     // Actions
     translate: "TRANSLATE",
+    cancel: "CANCEL",
     stop: "Stop",
     copy: "Copy",
     clear: "Clear",
@@ -248,6 +250,7 @@ export const translations = {
     
     // Actions
     translate: "번역",
+    cancel: "취소",
     stop: "중지",
     copy: "복사",
     clear: "지우기",

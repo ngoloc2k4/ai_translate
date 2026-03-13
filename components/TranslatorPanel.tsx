@@ -15,7 +15,7 @@ interface TranslatorPanelProps {
 
 export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps) {
   const { t, locale, setLocale } = useI18n()
-  const { result, loading, error, translate, reset } = useTranslation()
+  const { result, loading, error, translate, reset, stop } = useTranslation()
 
   const [apiKeys, setApiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
   const [fontSize, setFontSize] = useState<number>(() => {
@@ -54,6 +54,22 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
     window.addEventListener("open-settings", handleOpenSettings)
     return () => window.removeEventListener("open-settings", handleOpenSettings)
   }, [])
+
+  // Keyboard shortcut: Ctrl+Enter to translate
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "Enter") {
+        e.preventDefault()
+        if (loading) {
+          stop()
+        } else {
+          handleTranslate()
+        }
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [loading, sourceText, sourceLang, targetLang, provider, model, tone, mode, creativity, apiKeys])
 
   // Update stats
   useEffect(() => {
@@ -581,16 +597,28 @@ export default function TranslatorPanel({ onStatsChange }: TranslatorPanelProps)
         </div>
 
         {/* Translate Button */}
-        <button
-          onClick={handleTranslate}
-          disabled={loading || !sourceText.trim()}
-          className="ml-2 flex items-center gap-2 px-5 py-2 rounded-[10px] bg-[var(--primary)] text-white font-bold text-xs shadow-lg shadow-[var(--primary)]/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          {t("translate")}
-        </button>
+        {loading ? (
+          <button
+            onClick={stop}
+            className="ml-2 flex items-center gap-2 px-5 py-2 rounded-[10px] bg-red-600 text-white font-bold text-xs shadow-lg shadow-red-600/20 hover:brightness-110 active:scale-[0.98] transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            {t("cancel")}
+          </button>
+        ) : (
+          <button
+            onClick={handleTranslate}
+            disabled={!sourceText.trim()}
+            className="ml-2 flex items-center gap-2 px-5 py-2 rounded-[10px] bg-[var(--primary)] text-white font-bold text-xs shadow-lg shadow-[var(--primary)]/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            {t("translate")}
+          </button>
+        )}
       </section>
 
       {/* Translation Panels */}
