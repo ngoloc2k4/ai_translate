@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { checkRateLimit } from "./rate-limit"
+import { checkRateLimit } from "../rate-limit"
 
 const RATE_LIMIT = 10 // requests per minute
 
