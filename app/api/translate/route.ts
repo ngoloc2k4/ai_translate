@@ -4,10 +4,39 @@ import { callProvider } from "@/lib/ai/providers"
 import { validateApiKeyAsync, getApiKeyToUse } from "@/lib/utils/validateKey"
 import { sanitizeInput, sanitizeLanguageCode, sanitizeProvider, sanitizeModel, detectPromptInjection } from "@/lib/utils/sanitizeInput"
 import { logRequest, logAuth, logSecurity } from "@/lib/utils/logger"
+import { checkRateLimit } from "@/app/api/rate-limit"
 import type { TranslationOutput } from "@/lib/ai/prompt/jsonOutputSchema"
+
+const TRANSLATE_RATE_LIMIT = 20 // requests per minute
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
+  
+  // Check rate limit first
+  const rateLimitResult = checkRateLimit(req, TRANSLATE_RATE_LIMIT)
+  
+  if (!rateLimitResult.isAllowed) {
+    logSecurity('Rate limit exceeded', { 
+      ip: req.headers.get("x-forwarded-for") || 'unknown',
+      resetTime: rateLimitResult.resetTime,
+    })
+    
+    return NextResponse.json(
+      { 
+        error: "Rate limit exceeded",
+        message: `Too many requests. Please try again after ${new Date(rateLimitResult.resetTime).toLocaleTimeString()}`,
+        retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+      },
+      { 
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': TRANSLATE_RATE_LIMIT.toString(),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
+        },
+      }
+    )
+  }
   
   try {
     const body = await req.json()
@@ -175,6 +204,11 @@ export async function POST(req: NextRequest) {
 
     // Return transformed streaming response
     const response = new NextResponse(transformedStream)
+    
+    // Add rate limit headers
+    response.headers.set('X-RateLimit-Limit', TRANSLATE_RATE_LIMIT.toString())
+    response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString())
+    response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString())
     
     // Log successful response
     logAuth('success', { provider, source: clientApiKey ? 'client' : 'server' })

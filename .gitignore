@@ -1,70 +1,68 @@
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+target/
+
 # Dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.venv/
+venv/
+node_modules/
+.julia/
+zig*/
+.mypy_cache/
+.pytest_cache/
+.gradle/
 
-# Testing
-/coverage
-*.test.ts
-*.test.tsx
-*.spec.ts
-*.spec.tsx
-/tests
-/__tests__
-
-# next.js
-/.next/
-/out/
-
-# Production
-/build
-/dist
-
-# Misc
-.DS_Store
-*.pem
+# Logs and temp files
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# Environment variables
-.env*
-!.env.example
-!.env.local.example
-
-# Vercel
-.vercel
-
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
-
-# IDE
-.idea/
-.vscode/
+*.tmp
 *.swp
 *.swo
-*~
 
-# OS
+# Environment
+.env
+.env.local
+.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# System files
+.DS_Store
 Thumbs.db
-.AppleDouble
-.LSOverride
 
-# Temporary files
-*.tmp
-*.temp
-.cache/
-.temp/
+# Coverage
+coverage/
+htmlcov/
+.coverage
 
-# Security
-*.key
-*.crt
-*.pem
+# Compressed files
+*.zip
+*.gz
+*.tar
+*.tgz
+*.bz2
+*.xz
+*.7z
+*.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
+*.Z
+*.lz
+*.lzo
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.zst
+```
