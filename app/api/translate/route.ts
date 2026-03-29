@@ -6,7 +6,6 @@ import { sanitizeInput, sanitizeLanguageCode, sanitizeProvider, sanitizeModel, d
 import { logRequest, logAuth, logSecurity } from "@/lib/utils/logger"
 import { checkRateLimit } from "@/app/api/rate-limit"
 import type { TranslationOutput } from "@/lib/ai/prompt/jsonOutputSchema"
-import { checkRateLimit } from "@/app/api/rate-limit"
 
 const TRANSLATE_RATE_LIMIT = 20 // requests per minute
 
