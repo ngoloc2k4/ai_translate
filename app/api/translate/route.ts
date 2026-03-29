@@ -5,6 +5,7 @@ import { validateApiKeyAsync, getApiKeyToUse } from "@/lib/utils/validateKey"
 import { sanitizeInput, sanitizeLanguageCode, sanitizeProvider, sanitizeModel, detectPromptInjection } from "@/lib/utils/sanitizeInput"
 import { logRequest, logAuth, logSecurity } from "@/lib/utils/logger"
 import type { TranslationOutput } from "@/lib/ai/prompt/jsonOutputSchema"
+import { checkRateLimit } from "@/app/api/rate-limit"
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
