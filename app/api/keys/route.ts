@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     const result = ApiKeysSchema.safeParse(body)
     if (!result.success) {
       return NextResponse.json(
-        { error: "Invalid input", details: result.error.errors },
+        { error: "Invalid input", details: result.error.issues },
         { status: 400 }
       )
     }
