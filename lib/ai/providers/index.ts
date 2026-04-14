@@ -3,16 +3,7 @@ import { translateGroq } from "./groq"
 import { translateNvidia } from "./nvidia"
 import { translateOpenRouter } from "./openrouter"
 import { translateCustom } from "./custom"
-
-export interface ProviderParams {
-  provider: "gemini" | "groq" | "nvidia" | "openrouter" | "custom"
-  apiKey: string
-  model: string
-  systemPrompt: string
-  userPrompt: string
-  temperature: number
-  baseUrl?: string
-}
+import type { ProviderParams } from "@/types"
 
 export async function callProvider(params: ProviderParams): Promise<ReadableStream> {
   switch (params.provider) {

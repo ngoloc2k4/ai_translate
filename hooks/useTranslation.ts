@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react"
 import { saveHistory } from "@/lib/storage/storage"
+import { logInfo, logError } from "@/lib/utils/logger"
 import type { HistoryItem } from "@/types"
 import type { TranslationOutput } from "@/lib/ai/prompt/jsonOutputSchema"
 
@@ -52,8 +53,13 @@ export function useTranslation() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || "API error")
+        const errorMessage = errorData.error || "API error"
+        setError(errorMessage)
+        logError("Translation API Error", { provider: params.provider, error: errorMessage })
+        throw new Error(errorMessage)
       }
+      
+      logInfo("Translation Started", { provider: params.provider, model: params.model })
 
       // Handle streaming response
       const reader = response.body?.getReader()
@@ -74,22 +80,22 @@ export function useTranslation() {
         setResult(finalText)
       }
 
-      // Try to parse JSON response and extract result field
+      // Try to parse JSON response and extract result field (only if not already correct)
       try {
         const trimmedText = finalText.trim()
-        // Remove markdown code blocks if present
-        const jsonText = trimmedText.replace(/^```json\s*|\s*```$/g, '').trim()
-        const parsed = JSON.parse(jsonText) as TranslationOutput
-        
-        // Use the result field from JSON if available
-        if (parsed.result) {
-          finalText = parsed.result
-          setResult(parsed.result)
+        if (trimmedText.startsWith('{') || (trimmedText.startsWith('```json') && trimmedText.includes('{'))) {
+          const jsonText = trimmedText.replace(/^```json\s*|\s*```$/g, '').trim()
+          const parsed = JSON.parse(jsonText) as TranslationOutput
+          if (parsed.result) {
+            finalText = parsed.result
+            setResult(parsed.result)
+          }
         }
       } catch (e) {
-        // If JSON parsing fails, use the raw text
-        console.log('Using raw text (not JSON):', e)
+        // Not JSON, that's fine for simple translations
       }
+
+      logInfo("Translation Completed", { length: finalText.length })
 
       // Save history
       saveHistory({
@@ -98,6 +104,7 @@ export function useTranslation() {
         sourceLang: params.sourceLang || "auto",
         targetLang: params.targetLang,
         provider: params.provider,
+        model: params.model,
       })
 
       // Trigger history update callback

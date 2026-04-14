@@ -17,9 +17,6 @@ export default function Home() {
             AI Translation Lab
           </h1>
           <nav className="hidden md:flex items-center gap-5 ml-8">
-            <a className="text-xs font-semibold text-white border-b border-[var(--primary)] pb-0.5" href="#">
-              Workbench
-            </a>
             <a className="text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors" href="/history">
               History
             </a>
@@ -52,37 +49,6 @@ export default function Home() {
       <main className="flex-1 flex flex-col p-4 gap-4 overflow-hidden min-h-0">
         <TranslatorPanel />
       </main>
-
-      {/* Footer */}
-      <footer className="h-[32px] min-h-[32px] border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between px-4 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-            <span>Ready</span>
-          </div>
-          <div className="w-px h-2.5 bg-[var(--border)]"></div>
-          <div className="flex items-center gap-1">
-            <span className="text-zinc-600">LATENCY:</span>
-            <span className="text-zinc-400 font-mono">420MS</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-6 font-mono text-[9px]">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <span className="text-zinc-600">IN:</span>
-              <span className="text-zinc-300">0</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-zinc-600">OUT:</span>
-              <span className="text-zinc-300">0</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="text-zinc-600">TOTAL:</span>
-              <span className="text-[var(--primary)] font-bold">0</span>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

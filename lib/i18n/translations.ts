@@ -106,12 +106,21 @@ export const translations = {
     creativityDefault: "Mặc định",
     creativityHigh: "Cao",
 
-    // Providers
+    clipboardError: "Lỗi sao chép vào bộ nhớ tạm",
+    copied: "Đã chép",
     providerGemini: "Google Gemini",
     providerGroq: "Groq",
     providerNvidia: "NVIDIA NIM",
     providerOpenrouter: "OpenRouter",
     providerCustom: "Custom",
+    endpoint: "Endpoint",
+    endpointPlaceholder: "Nhập endpoint API tùy chỉnh...",
+    apiKeysPlaceholder: "Nhập khóa API cho {provider}...",
+    customProviderName: "Tên nhà cung cấp tùy chỉnh",
+    customEndpointUrl: "URL Endpoint tùy chỉnh",
+    customModels: "Mô hình tùy chỉnh",
+    modelsPlaceholder: "mô hình-1, mô hình-2",
+    commaSeparated: "Danh sách mô hình cách nhau bằng dấu phẩy",
   },
   en: {
     // Header
@@ -218,12 +227,21 @@ export const translations = {
     creativityDefault: "Default",
     creativityHigh: "High",
 
-    // Providers
+    clipboardError: "Failed to copy to clipboard",
+    copied: "Copied",
     providerGemini: "Google Gemini",
     providerGroq: "Groq",
     providerNvidia: "NVIDIA NIM",
     providerOpenrouter: "OpenRouter",
     providerCustom: "Custom",
+    endpoint: "Endpoint",
+    endpointPlaceholder: "Enter custom API endpoint...",
+    apiKeysPlaceholder: "Enter API key for {provider}...",
+    customProviderName: "Custom Provider Name",
+    customEndpointUrl: "Custom Endpoint URL",
+    customModels: "Custom Models",
+    modelsPlaceholder: "model-1, model-2",
+    commaSeparated: "Comma-separated model IDs",
   },
   ko: {
     // Header
@@ -330,12 +348,21 @@ export const translations = {
     creativityDefault: "기본",
     creativityHigh: "높음",
 
-    // Providers
+    clipboardError: "클립보드 복사 실패",
+    copied: "복사됨",
     providerGemini: "Google Gemini",
     providerGroq: "Groq",
     providerNvidia: "NVIDIA NIM",
     providerOpenrouter: "OpenRouter",
     providerCustom: "Custom",
+    endpoint: "엔드포인트",
+    endpointPlaceholder: "사용자 정의 API 엔드포인트 입력...",
+    apiKeysPlaceholder: "{provider}용 API 키 입력...",
+    customProviderName: "사용자 정의 공급자 이름",
+    customEndpointUrl: "사용자 정의 엔드포인트 URL",
+    customModels: "사용자 정의 모델",
+    modelsPlaceholder: "모델-1, 모델-2",
+    commaSeparated: "쉼표로 구분된 모델 ID",
   },
 } as const
 

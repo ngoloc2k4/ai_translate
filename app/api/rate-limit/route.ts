@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { checkRateLimit, resetRateLimitForIp } from "../rate-limit"
+import { checkRateLimitFromRequest, resetRateLimitForIp } from "@/lib/utils/rateLimit"
 
 /**
  * Rate Limiting API Route Handler
@@ -7,12 +7,12 @@ import { checkRateLimit, resetRateLimitForIp } from "../rate-limit"
  * Can be called from client-side to check rate limit status
  */
 export async function GET(req: NextRequest) {
-  const result = checkRateLimit(req)
+  const result = checkRateLimitFromRequest(req)
   
   return NextResponse.json({
     success: true,
     data: {
-      isAllowed: result.isAllowed,
+      isAllowed: result.allowed,
       remaining: result.remaining,
       resetTime: new Date(result.resetTime).toISOString(),
     },
@@ -30,7 +30,11 @@ export async function DELETE(req: NextRequest) {
     )
   }
   
-  resetRateLimitForIp(req)
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || 
+             req.headers.get("x-real-ip") || 
+             "unknown"
+  
+  resetRateLimitForIp(ip)
   
   return NextResponse.json({
     success: true,

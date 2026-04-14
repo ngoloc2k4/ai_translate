@@ -1,68 +1,50 @@
 import { NextRequest, NextResponse } from "next/server"
-import { checkRateLimit } from "../rate-limit"
+import { validateApiKeyAsync } from "@/lib/utils/validateKey"
+import { logAuth, logError } from "@/lib/utils/logger"
 
-const RATE_LIMIT = 10 // requests per minute
+// The proxy (middleware) handles rate limiting now
+// We can still keep a local limit for this specific sensitive route if desired
+const RATE_LIMIT_FOR_VALIDATION = 5 // stricter limit for validation attempts
 
 export async function POST(req: NextRequest) {
-  // Check rate limit first
-  const rateLimitResult = checkRateLimit(req, RATE_LIMIT)
-  
-  if (!rateLimitResult.isAllowed) {
-    return NextResponse.json(
-      { 
-        error: "Rate limit exceeded",
-        message: `Too many requests. Please try again after ${new Date(rateLimitResult.resetTime).toLocaleTimeString()}`,
-        retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
-      },
-      { 
-        status: 429,
-        headers: {
-          'X-RateLimit-Limit': RATE_LIMIT.toString(),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': rateLimitResult.resetTime.toString(),
-        },
-      }
-    )
-  }
-
   try {
     const body = await req.json()
-    const { text, provider } = body
+    const { key, provider } = body
 
     // Validate input
-    if (!text || !provider) {
+    if (!key || !provider) {
       return NextResponse.json(
-        { error: "Missing required fields: text, provider" },
+        { error: "Missing required fields: key, provider" },
         { status: 400 }
       )
     }
 
-    // Simulate validation (in real scenario, this would validate against the provider)
-    const isValid = true // Replace with actual validation logic
+    // Call actual validation logic that talks to providers
+    const isValid = await validateApiKeyAsync(provider, key)
 
     if (!isValid) {
+      logAuth('failure', { provider, reason: 'invalid_key' })
       return NextResponse.json(
         { error: "Invalid API key" },
         { status: 401 }
       )
     }
 
+    logAuth('success', { provider, source: 'validation_check' })
+    
     return NextResponse.json({
       success: true,
       data: {
         valid: true,
         provider,
-        rateLimit: {
-          remaining: rateLimitResult.remaining,
-          resetTime: new Date(rateLimitResult.resetTime).toISOString(),
-        },
       },
     })
   } catch (error) {
-    console.error("Validation error:", error)
+    logError("Validation route error:", { error })
     return NextResponse.json(
       { error: "Validation failed" },
       { status: 500 }
     )
   }
 }
+

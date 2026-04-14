@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { TranslationProvider } from "@/lib/i18n/useTranslation";
+import { ToastProvider } from "@/components/ui/Toast";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,7 +23,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased`}>
         <TranslationProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </TranslationProvider>
       </body>
     </html>

@@ -28,6 +28,7 @@ export interface HistoryItem {
   sourceLang: string
   targetLang: string
   provider: string
+  model?: string
   mode?: string
   tone?: string
 }
@@ -51,3 +52,14 @@ export interface ApiKeys {
     custom?: string[]
   }
 }
+
+export interface ProviderParams {
+  provider: "gemini" | "groq" | "nvidia" | "openrouter" | "custom"
+  apiKey: string
+  model: string
+  systemPrompt: string
+  userPrompt: string
+  temperature: number
+  baseUrl?: string
+}
+

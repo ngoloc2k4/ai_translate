@@ -1,80 +1,75 @@
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
 
 /**
- * Next.js Proxy for Security (Next.js 16+)
- * 
- * - Rate limiting for API routes
- * - Security headers for all responses
- * 
- * @see https://nextjs.org/docs/messages/middleware-to-proxy
+ * Next.js Middleware for Security and Rate Limiting (Next.js 16+)
  */
 
-const RATE_LIMIT = 10 // requests per minute
-const WINDOW_MS = 60 * 1000 // 1 minute
+import { checkRateLimit } from "@/lib/utils/rateLimit"
 
-const requestCounts = new Map<string, { count: number; resetTime: number }>()
 
-function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetTime: number } {
-  const now = Date.now()
-  const record = requestCounts.get(ip)
-
-  if (!record || now > record.resetTime) {
-    requestCounts.set(ip, { count: 1, resetTime: now + WINDOW_MS })
-    return { allowed: true, remaining: RATE_LIMIT - 1, resetTime: now + WINDOW_MS }
-  }
-
-  const remaining = Math.max(0, RATE_LIMIT - record.count)
-
-  if (record.count >= RATE_LIMIT) {
-    return { allowed: false, remaining: 0, resetTime: record.resetTime }
-  }
-
-  record.count++
-  requestCounts.set(ip, record)
-  return { allowed: true, remaining: remaining - 1, resetTime: record.resetTime }
-}
-
-export function proxy(request: Request) {
+export function proxy(request: NextRequest) {
   const url = new URL(request.url)
   const { pathname } = url
   
-  // Rate Limiting for API Routes
-  if (pathname.startsWith('/api/')) {
-    const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || 
-               request.headers.get("x-real-ip") || 
-               "unknown"
-    
-    const rateLimitResult = checkRateLimit(ip)
-    
-    if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: "Rate limit exceeded. Please try again later." },
-        {
-          status: 429,
-          headers: {
-            'X-RateLimit-Limit': String(RATE_LIMIT),
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000)),
-            'Retry-After': String(Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)),
-          },
-        }
-      )
-    }
-    
-    // Continue with rate limit headers
-    return NextResponse.next({
-      headers: {
-        'X-RateLimit-Limit': String(RATE_LIMIT),
-        'X-RateLimit-Remaining': String(rateLimitResult.remaining),
-        'X-RateLimit-Reset': String(Math.ceil(rateLimitResult.resetTime / 1000)),
-      },
-    })
-  }
+  const response = pathname.startsWith('/api/') 
+    ? handleApiRoute(request, pathname)
+    : NextResponse.next()
 
-  // Add security headers to all other responses
-  return NextResponse.next()
+  // Add broad security headers to all responses
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  
+  return response
+}
+
+function handleApiRoute(request: NextRequest, pathname: string) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || 
+             request.headers.get("x-real-ip") || 
+             "unknown"
+  
+  const { allowed, remaining, resetTime, limit } = checkRateLimit(ip, pathname)
+  
+  if (!allowed) {
+    return NextResponse.json(
+      { 
+        error: "Rate limit exceeded",
+        message: "Too many requests. Please try again later.",
+        retryAfter: Math.ceil((resetTime - Date.now()) / 1000)
+      },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': String(limit),
+          'X-RateLimit-Remaining': '0',
+          'X-RateLimit-Reset': String(Math.ceil(resetTime / 1000)),
+          'Retry-After': String(Math.ceil((resetTime - Date.now()) / 1000)),
+        },
+      }
+    )
+  }
+  
+  const response = NextResponse.next()
+  
+  // Set rate limit headers
+  response.headers.set('X-RateLimit-Limit', String(limit))
+  response.headers.set('X-RateLimit-Remaining', String(remaining))
+  response.headers.set('X-RateLimit-Reset', String(Math.ceil(resetTime / 1000)))
+  
+  return response
 }
 
 export const config = {
-  matcher: "/api/:path*",
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
 }
+
