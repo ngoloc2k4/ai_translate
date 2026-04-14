@@ -6,7 +6,7 @@ import {
   validateCustomApiKey,
 } from './validateApiKeyServer'
 import { getServerSideApiKey, getServerSideCustomEndpoint } from './serverSideKeys'
-import { logAuth, logSecurity } from './logger'
+import { logAuth, logSecurity, logError } from './logger'
 
 /**
  * Enhanced API Key Validation
@@ -71,7 +71,7 @@ async function validateWithProvider(provider: string, key: string): Promise<bool
         return false
     }
   } catch (error) {
-    console.error(`[API Key Validation] Error validating ${provider}:`, error)
+    logError(`API Key Validation error for ${provider}`, { error })
     return false
   }
 }

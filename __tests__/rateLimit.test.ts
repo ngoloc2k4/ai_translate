@@ -1,66 +1,63 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { checkRateLimit } from '../app/api/rate-limit'
-
-// Mock NextRequest
-function createMockRequest(ip: string = '127.0.0.1') {
-  return {
-    headers: {
-      get: (name: string) => {
-        if (name === 'x-forwarded-for') return ip
-        if (name === 'x-real-ip') return ip
-        return null
-      }
-    }
-  } as any
-}
+import { describe, it, expect, beforeEach } from 'bun:test'
+import { checkRateLimit, resetRateLimitForIp } from '../lib/utils/rateLimit'
 
 describe('Rate Limiting', () => {
   beforeEach(() => {
-    // Clear rate limit store between tests
-    // Note: In a real scenario, we'd need to export the store for testing
+    // Reset rate limits between tests to avoid interference
+    resetRateLimitForIp('192.168.1.1')
+    resetRateLimitForIp('192.168.1.2')
+    resetRateLimitForIp('192.168.1.3')
+    resetRateLimitForIp('192.168.1.4')
+    resetRateLimitForIp('192.168.1.5')
   })
 
   it('should allow requests under the limit', () => {
-    const req = createMockRequest('192.168.1.1')
-    const result = checkRateLimit(req, 5, 60000)
+    const result = checkRateLimit('192.168.1.1', '/api/translate')
     
-    expect(result.isAllowed).toBe(true)
-    expect(result.remaining).toBe(4) // 5 - 1 = 4
+    expect(result.allowed).toBe(true)
+    expect(result.remaining).toBe(19) // 20 - 1 = 19
   })
 
   it('should block requests over the limit', () => {
-    const req = createMockRequest('192.168.1.2')
+    const ip = '192.168.1.2'
+    const path = '/api/validate-key' // Limit is 5
     
-    // Make 5 requests (the limit)
+    // Make 5 requests
     for (let i = 0; i < 5; i++) {
-      checkRateLimit(req, 5, 60000)
+      checkRateLimit(ip, path)
     }
     
     // 6th request should be blocked
-    const result = checkRateLimit(req, 5, 60000)
-    expect(result.isAllowed).toBe(false)
+    const result = checkRateLimit(ip, path)
+    expect(result.allowed).toBe(false)
     expect(result.remaining).toBe(0)
   })
 
-  it('should track different IPs separately', () => {
-    const req1 = createMockRequest('192.168.1.3')
-    const req2 = createMockRequest('192.168.1.4')
+  it('should track different IPs and paths separately', () => {
+    const ip1 = '192.168.1.3'
+    const ip2 = '192.168.1.4'
+    const path1 = '/api/translate'
+    const path2 = '/api/validate-key'
     
-    const result1 = checkRateLimit(req1, 5, 60000)
-    const result2 = checkRateLimit(req2, 5, 60000)
+    const result1 = checkRateLimit(ip1, path1)
+    const result2 = checkRateLimit(ip2, path1)
+    const result3 = checkRateLimit(ip1, path2)
     
-    expect(result1.isAllowed).toBe(true)
-    expect(result2.isAllowed).toBe(true)
-    expect(result1.remaining).toBe(4)
-    expect(result2.remaining).toBe(4)
+    expect(result1.allowed).toBe(true)
+    expect(result2.allowed).toBe(true)
+    expect(result3.allowed).toBe(true)
+    
+    expect(result1.remaining).toBe(19)
+    expect(result2.remaining).toBe(19)
+    expect(result3.remaining).toBe(4)
   })
 
-  it('should include reset time in response', () => {
-    const req = createMockRequest('192.168.1.5')
-    const result = checkRateLimit(req, 5, 60000)
+  it('should include reset time and limit in response', () => {
+    const result = checkRateLimit('192.168.1.5', '/api/other')
     
     expect(result.resetTime).toBeDefined()
+    expect(result.limit).toBe(10) // Default limit
     expect(result.resetTime).toBeGreaterThan(Date.now())
-    expect(result.resetTime).toBeLessThanOrEqual(Date.now() + 60000)
   })
 })
+

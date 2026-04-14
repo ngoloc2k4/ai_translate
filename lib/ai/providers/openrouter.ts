@@ -1,10 +1,7 @@
-export interface ProviderParams {
-  apiKey: string
-  model: string
-  systemPrompt: string
-  userPrompt: string
-  temperature: number
-}
+import { logAuth } from "@/lib/utils/logger"
+import type { ProviderParams } from "@/types"
+
+const PROVIDER_TIMEOUT_MS = 30_000
 
 export async function translateOpenRouter({
   apiKey,
@@ -13,29 +10,45 @@ export async function translateOpenRouter({
   userPrompt,
   temperature,
 }: ProviderParams): Promise<ReadableStream> {
-  const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-      "HTTP-Referer": "https://github.com/ai_translate",
-      "X-Title": "AI Translate",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature,
-      stream: true,
-    }),
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS)
 
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`OpenRouter API error (${response.status}): ${error}`)
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/ngoloc2k4/ai_translate",
+        "X-Title": "AI Translate Lab",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature,
+        stream: true,
+      }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.json()
+      const msg = error.error?.message || "OpenRouter API error"
+      logAuth('failure', { provider: 'openrouter', reason: msg })
+      throw new Error(msg)
+    }
+
+    logAuth('success', { provider: 'openrouter', source: 'api_call' })
+    return response.body || new ReadableStream()
+  } catch (error) {
+    clearTimeout(timeoutId)
+    const msg = error instanceof Error ? error.message : "Unknown error"
+    logAuth('failure', { provider: 'openrouter', reason: msg })
+    throw error
   }
-
-  return response.body || new ReadableStream()
 }

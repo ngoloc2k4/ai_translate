@@ -1,9 +1,11 @@
 /**
  * Server-Side API Key Validation
- * 
+ *
  * Validates API keys with actual provider APIs to prevent fake key usage
  * Implements caching to reduce API calls and improve performance
  */
+
+import { logError } from './logger'
 
 const keyValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
@@ -38,7 +40,7 @@ export async function validateGeminiApiKey(key: string): Promise<boolean> {
     keyValidationCache.set(`gemini:${key}`, { valid: isValid, timestamp: Date.now() })
     return isValid
   } catch (error) {
-    console.error('[Gemini] Key validation error:', error)
+    logError('Gemini key validation error', { error })
     return false
   }
 }
@@ -70,7 +72,7 @@ export async function validateGroqApiKey(key: string): Promise<boolean> {
     keyValidationCache.set(`groq:${key}`, { valid: isValid, timestamp: Date.now() })
     return isValid
   } catch (error) {
-    console.error('[Groq] Key validation error:', error)
+    logError('Groq key validation error', { error })
     return false
   }
 }
@@ -104,7 +106,7 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
     keyValidationCache.set(`nvidia:${key}`, { valid: isValid, timestamp: Date.now() })
     return isValid
   } catch (error) {
-    console.error('[NVIDIA] Key validation error:', error)
+    logError('NVIDIA key validation error', { error })
     return false
   }
 }
@@ -137,7 +139,7 @@ export async function validateOpenRouterApiKey(key: string): Promise<boolean> {
     keyValidationCache.set(`openrouter:${key}`, { valid: isValid, timestamp: Date.now() })
     return isValid
   } catch (error) {
-    console.error('[OpenRouter] Key validation error:', error)
+    logError('OpenRouter key validation error', { error })
     return false
   }
 }
@@ -161,11 +163,11 @@ export async function validateCustomApiKey(key: string, endpoint?: string): Prom
           'Content-Type': 'application/json',
         },
       })
-      
+
       // If we get any response (even 400/405), the key format is likely valid
       return response.status !== 401 && response.status !== 403
     } catch (error) {
-      console.error('[Custom] Key validation error:', error)
+      logError('Custom key validation error', { error })
       return false
     }
   }

@@ -1,11 +1,7 @@
-export interface ProviderParams {
-  apiKey: string
-  model: string
-  systemPrompt: string
-  userPrompt: string
-  temperature: number
-  baseUrl?: string
-}
+import { logAuth } from "@/lib/utils/logger"
+import type { ProviderParams } from "@/types"
+
+const PROVIDER_TIMEOUT_MS = 30_000
 
 export async function translateCustom({
   apiKey,
@@ -15,30 +11,46 @@ export async function translateCustom({
   temperature,
   baseUrl,
 }: ProviderParams): Promise<ReadableStream> {
-  // Default to OpenAI-compatible API endpoint
-  const endpoint = baseUrl || "https://api.openai.com/v1/chat/completions"
-
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userPrompt },
-      ],
-      temperature,
-      stream: true,
-    }),
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Custom API error (${response.status}): ${error}`)
+  if (!baseUrl) {
+    throw new Error("Custom provider requires a base URL")
   }
 
-  return response.body || new ReadableStream()
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS)
+
+  try {
+    const response = await fetch(baseUrl, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
+        ],
+        temperature,
+        stream: true,
+      }),
+      signal: controller.signal,
+    })
+
+    clearTimeout(timeoutId)
+
+    if (!response.ok) {
+      const error = await response.text()
+      logAuth('failure', { provider: 'custom', reason: error })
+      throw new Error(`Custom API error (${response.status}): ${error}`)
+    }
+
+    logAuth('success', { provider: 'custom', source: 'api_call' })
+    return response.body || new ReadableStream()
+  } catch (error) {
+    clearTimeout(timeoutId)
+    const msg = error instanceof Error ? error.message : "Unknown error"
+    logAuth('failure', { provider: 'custom', reason: msg })
+    throw error
+  }
 }

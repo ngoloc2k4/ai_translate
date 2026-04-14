@@ -1,13 +1,20 @@
 "use client"
 
 import { useState } from "react"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { useTranslation as useI18n } from "@/lib/i18n/useTranslation"
 import { useHistory } from "@/hooks/useHistory"
 import { useTranslation } from "@/hooks/useTranslation"
+import { useRouter } from "next/navigation"
 import { LANGUAGES } from "@/lib/constants/languages"
-import { useTranslation as useI18n } from "@/lib/i18n/useTranslation"
+import type { ApiKeys, HistoryItem } from "@/types"
+import { useToast } from "@/components/ui/Toast"
 
 export default function HistoryPage() {
   const { t } = useI18n()
+  const { showToast } = useToast()
+  const router = useRouter()
+  const [apiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
   const { items: historyItems, clear: clearHistory, deleteItem } = useHistory()
   const { translate, loading, result } = useTranslation()
   
@@ -24,14 +31,24 @@ export default function HistoryPage() {
   const handleTranslateAgain = () => {
     if (!selectedItem || !editedText.trim()) return
 
+    const provider = selectedItem.provider as keyof ApiKeys
+    const apiKey = apiKeys[provider] as string
+
+    if (!apiKey) {
+      const providerName = provider.charAt(0).toUpperCase() + provider.slice(1)
+      showToast(`Please configure your ${providerName} API key in Settings first.`, "error")
+      return
+    }
+
     translate({
       text: editedText,
       sourceLang: selectedItem.sourceLang,
       targetLang: selectedItem.targetLang,
       provider: selectedItem.provider as any,
-      model: "gemini-2.5-flash",
-      apiKey: "",
-      options: { 
+      model: selectedItem.model || "gemini-2.0-flash",
+      apiKey,
+      baseUrl: selectedItem.provider === "custom" ? apiKeys.customEndpoint : undefined,
+      options: {
         mode: selectedItem.mode || "default",
         tone: selectedItem.tone || "default",
       },
@@ -148,7 +165,7 @@ export default function HistoryPage() {
       {/* Header with Back Button */}
       <div className="flex items-center gap-3 mb-4">
         <button
-          onClick={() => window.location.href = '/'}
+          onClick={() => router.push('/')}
           className="p-2 rounded-[10px] bg-[var(--panel)] border border-[var(--border)] text-zinc-400 hover:text-white hover:border-zinc-600 transition-all"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,16 +236,4 @@ export default function HistoryPage() {
       )}
     </div>
   )
-}
-
-interface HistoryItem {
-  id: number
-  time: string
-  sourceText: string
-  translatedText: string
-  sourceLang: string
-  targetLang: string
-  provider: string
-  mode?: string
-  tone?: string
 }

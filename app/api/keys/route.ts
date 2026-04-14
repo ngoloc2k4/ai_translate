@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
+import { logError, logInfo, logSecurity } from "@/lib/utils/logger"
 
 // Schema validation for API keys
 const ApiKeysSchema = z.object({
@@ -40,7 +41,7 @@ export async function GET(req: NextRequest) {
       data: configuredProviders,
     })
   } catch (error) {
-    console.error("Error fetching key status:", error)
+    logError("Error fetching key status:", { error })
     return NextResponse.json(
       { error: "Failed to fetch key configuration" },
       { status: 500 }
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
     // SECURITY WARNING: In production, keys should ONLY be set via environment variables
     // This endpoint logs the attempt but doesn't actually store keys dynamically
     if (process.env.NODE_ENV === 'production') {
-      console.warn("Attempted to set API keys via API in production. Use environment variables instead.")
+      logSecurity("Attempted to set API keys via API in production", { reason: "use_env_vars" })
       return NextResponse.json(
         { 
           error: "Cannot set API keys via API in production",
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
 
     // In development, we can provide guidance but still don't store dynamically
     // Keys should be set in .env.local file
-    console.log("[Dev Mode] API Keys update requested for providers:", Object.keys(keys).filter(k => keys[k as keyof typeof keys]))
+    logInfo("API Keys update requested", { providers: Object.keys(keys).filter(k => keys[k as keyof typeof keys]) })
 
     return NextResponse.json({
       success: true,
@@ -92,7 +93,7 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("Error updating API keys:", error)
+    logError("Error updating API keys:", { error })
     return NextResponse.json(
       { error: "Failed to update API keys" },
       { status: 500 }
@@ -109,14 +110,14 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    console.log("[Dev Mode] API Keys clear requested")
+    logInfo("API Keys clear requested", { env: "development" })
 
     return NextResponse.json({
       success: true,
       message: "In development mode. Please remove keys from .env.local file",
     })
   } catch (error) {
-    console.error("Error clearing API keys:", error)
+    logError("Error clearing API keys:", { error })
     return NextResponse.json(
       { error: "Failed to clear API keys" },
       { status: 500 }

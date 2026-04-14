@@ -10,10 +10,12 @@ export function getApiKeys(): ApiKeys {
 }
 
 export function saveApiKeys(keys: ApiKeys): void {
+  if (typeof window === "undefined") return
   localStorage.setItem(KEYS_STORAGE_KEY, JSON.stringify(keys))
 }
 
 export function clearApiKeys(): void {
+  if (typeof window === "undefined") return
   localStorage.removeItem(KEYS_STORAGE_KEY)
 }
 
