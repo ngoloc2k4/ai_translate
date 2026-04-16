@@ -1,5 +1,15 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { Ratelimit } from "@upstash/ratelimit"
+import { Redis } from "@upstash/redis"
+
+const hasUpstashConfig = process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN;
+const ratelimit = hasUpstashConfig ? new Ratelimit({
+  redis: Redis.fromEnv(),
+  limiter: Ratelimit.slidingWindow(15, "1 m"),
+  analytics: true,
+}) : null;
+
 
 /**
  * Next.js Middleware for Security and Rate Limiting (Next.js 16+)
@@ -8,12 +18,12 @@ import type { NextRequest } from "next/server"
 import { checkRateLimit } from "@/lib/utils/rateLimit"
 
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url = new URL(request.url)
   const { pathname } = url
   
   const response = pathname.startsWith('/api/') 
-    ? handleApiRoute(request, pathname)
+    ? await handleApiRoute(request, pathname)
     : NextResponse.next()
 
   // Add broad security headers to all responses
@@ -25,10 +35,50 @@ export function proxy(request: NextRequest) {
   return response
 }
 
-function handleApiRoute(request: NextRequest, pathname: string) {
+async function handleApiRoute(request: NextRequest, pathname: string) {
+  // 1. Session Authentication Check
+  const correctUsername = process.env.APP_USERNAME
+  const correctPassword = process.env.APP_PASSWORD
+
+  // Skip auth checks for /api/auth and generic /api/ test routes if any
+  if (pathname !== "/api/auth" && correctUsername && correctPassword) {
+    if (pathname.startsWith('/api/translate') || pathname.startsWith('/api/models') || pathname.startsWith('/api/keys')) {
+      const sessionCookie = request.cookies.get("ai_translate_session")?.value
+      
+      if (sessionCookie !== correctPassword) {
+        return new NextResponse(
+          JSON.stringify({ success: false, error: "Unauthorized access. Please login via /login first." }), 
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+  }
+
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || 
              request.headers.get("x-real-ip") || 
-             "unknown"
+             "127.0.0.1"
+
+  if (pathname.startsWith("/api/translate")) {
+    try {
+      if (!ratelimit) {
+        console.warn("[Proxy.ts] Missing UPSTASH_REDIS_REST_URL. Upstash Rate Limiter disabled.")
+      } else {
+        const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`)
+        if (!success) {
+          return new NextResponse("Rate limited. Too many requests.", {
+            status: 429,
+            headers: {
+              "X-RateLimit-Limit": limit.toString(),
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset": reset.toString(),
+            },
+          })
+        }
+      }
+    } catch (err) {
+      console.error("Upstash Rate Limiter Error:", err)
+    }
+  }
   
   const { allowed, remaining, resetTime, limit } = checkRateLimit(ip, pathname)
   

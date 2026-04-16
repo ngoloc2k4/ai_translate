@@ -6,7 +6,8 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useToast } from "@/components/ui/Toast"
 import { LANGUAGES } from "@/lib/constants/languages"
-import { MAX_CHARACTERS } from "@/lib/constants/providers"
+import { MAX_CHARACTERS, MODELS } from "@/lib/constants/providers"
+import { useAppSettings } from "@/store/useAppSettings"
 import type { ApiKeys } from "@/types"
 
 // Decomposed Components
@@ -23,15 +24,10 @@ export default function TranslatorPanel() {
   const { showToast } = useToast()
   const { result, loading, error, translate, reset, stop } = useTranslation()
 
-  const [apiKeys, setApiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
-  const [fontSize, setFontSize] = useState<number>(() => {
-    const saved = typeof window !== 'undefined' ? localStorage.getItem("ai_translate_font_size") : null
-    return saved ? Number(saved) : 14
-  })
-  
+  const { fontSize, setFontSize, apiKeys, setApiKeys, serverKeys, hasHydrated } = useAppSettings()
+  const [mounted, setMounted] = useState(false)
   const [savedProvider, setSavedProvider] = useLocalStorage<"gemini" | "groq" | "nvidia" | "openrouter" | "custom">("ai_translate_provider", "gemini")
   const [savedModel, setSavedModel] = useLocalStorage<string>("ai_translate_model", "gemini-2.5-flash")
-  const [mounted, setMounted] = useState(false)
 
   const [sourceText, setSourceText] = useState("")
   const [sourceLang, setSourceLang] = useLocalStorage<string>("ai_translate_source_lang", "auto")
@@ -55,6 +51,7 @@ export default function TranslatorPanel() {
   const creativityRef = useRef(creativity)
   const temperatureRef = useRef(temperature)
   const apiKeysRef = useRef(apiKeys)
+  const serverKeysRef = useRef(serverKeys)
   const loadingRef = useRef(loading)
 
   useEffect(() => {
@@ -68,8 +65,9 @@ export default function TranslatorPanel() {
     creativityRef.current = creativity
     temperatureRef.current = temperature
     apiKeysRef.current = apiKeys
+    serverKeysRef.current = serverKeys
     loadingRef.current = loading
-  }, [sourceText, sourceLang, targetLang, provider, model, tone, mode, creativity, temperature, apiKeys, loading])
+  }, [sourceText, sourceLang, targetLang, provider, model, tone, mode, creativity, temperature, apiKeys, serverKeys, loading])
 
   useEffect(() => {
     setMounted(true)
@@ -78,11 +76,10 @@ export default function TranslatorPanel() {
   // Sync with local storage
   useEffect(() => {
     if (mounted) {
-      localStorage.setItem("ai_translate_font_size", fontSize.toString())
       setSavedProvider(provider)
       setSavedModel(model)
     }
-  }, [fontSize, provider, model, mounted, setSavedProvider, setSavedModel])
+  }, [provider, model, mounted, setSavedProvider, setSavedModel])
 
   // Listen for global settings event
   useEffect(() => {
@@ -109,7 +106,8 @@ export default function TranslatorPanel() {
           }
 
           const apiKey = apiKeysRef.current[providerRef.current as keyof ApiKeys] as string
-          if (!apiKey) {
+          const hasServerKey = serverKeysRef.current[providerRef.current]
+          if (!apiKey && !hasServerKey) {
             showToast(t("invalidApiKey"), "error")
             setShowSettings(true)
             return
@@ -146,7 +144,8 @@ export default function TranslatorPanel() {
     }
 
     const apiKey = apiKeys[provider as keyof ApiKeys] as string
-    if (!apiKey) {
+    const hasServerKey = serverKeys[provider]
+    if (!apiKey && !hasServerKey) {
       showToast(t("invalidApiKey"), "error")
       setShowSettings(true)
       return
@@ -174,15 +173,13 @@ export default function TranslatorPanel() {
   if (!mounted) return null
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden gap-4">
+    <div 
+      className="flex-1 flex flex-col min-h-0 overflow-hidden gap-4"
+      style={{ '--app-font-size': `${fontSize}px` } as React.CSSProperties}
+    >
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
-        apiKeys={apiKeys}
-        setApiKeys={setApiKeys}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        mounted={mounted}
       />
 
       <div className="flex flex-col gap-2">
@@ -196,7 +193,16 @@ export default function TranslatorPanel() {
 
         <ControlBar
           provider={provider}
-          setProvider={setProvider}
+          setProvider={(newProvider) => {
+            setProvider(newProvider)
+            if (newProvider !== provider) {
+              const availableModels = MODELS[newProvider as keyof typeof MODELS]
+              if (availableModels && availableModels.length > 0) {
+                const firstModel = availableModels[0]
+                setModel(typeof firstModel === "string" ? firstModel : firstModel.id)
+              }
+            }
+          }}
           model={model}
           setModel={setModel}
           temperature={temperature}
@@ -206,20 +212,20 @@ export default function TranslatorPanel() {
         />
       </div>
 
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden min-h-0 px-4 pb-4">
+      <div className="flex-1 grid grid-cols-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1 gap-4 overflow-hidden min-h-0 px-4 pb-4">
         <SourcePanel
           sourceText={sourceText}
           setSourceText={setSourceText}
           onTranslate={handleTranslate}
+          onStop={stop}
           isTranslating={loading}
-          fontSize={fontSize}
           t={t}
         />
 
         <ResultPanel
           translatedText={result}
           isTranslating={loading}
-          fontSize={fontSize}
+          error={error}
           t={t}
         />
       </div>

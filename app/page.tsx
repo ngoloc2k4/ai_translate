@@ -1,8 +1,33 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import TranslatorPanel from "@/components/TranslatorPanel"
+import { useAppSettings } from "@/store/useAppSettings"
 
 export default function Home() {
+  const { apiKeys, serverKeys, setServerKeys } = useAppSettings()
+  const [showStatus, setShowStatus] = useState(false)
+
+  useEffect(() => {
+    async function fetchServerKeys() {
+      try {
+        const res = await fetch('/api/keys')
+        if (res.ok) {
+          const json = await res.json()
+          if (json.success) {
+            setServerKeys(json.data)
+          }
+        }
+      } catch (err) {}
+    }
+    fetchServerKeys()
+  }, [])
+
+  const allProviders = ["gemini", "groq", "nvidia", "openrouter", "custom"]
+  const configuredProviders = allProviders.filter(p => 
+    serverKeys[p] || (apiKeys as any)[p] || (p === "custom" && apiKeys.customEndpoint)
+  )
+  const hasKeys = configuredProviders.length > 0
   return (
     <div className="min-h-screen flex flex-col overflow-hidden">
       {/* Header */}
@@ -24,9 +49,33 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-3">
           {/* API Key Status - Desktop */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-[10px] bg-[var(--panel)] border border-[var(--border)]">
-            <div className="w-2 h-2 rounded-full bg-amber-500"></div>
-            <span className="text-[10px] font-semibold text-zinc-400 uppercase">API Keys</span>
+          <div 
+            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-[10px] bg-[var(--panel)] border border-[var(--border)] relative cursor-help"
+            onMouseEnter={() => setShowStatus(true)}
+            onMouseLeave={() => setShowStatus(false)}
+          >
+            <div className={`w-2 h-2 rounded-full ${hasKeys ? "bg-emerald-500" : "bg-amber-500"}`}></div>
+            <span className="text-[10px] font-semibold text-zinc-400 uppercase">
+              API Keys {hasKeys && `(${configuredProviders.length})`}
+            </span>
+            
+            {/* Tooltip */}
+            {showStatus && (
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-[var(--panel)] border border-[var(--border)] rounded-lg shadow-xl shadow-black/50 p-3 z-50">
+                <div className="text-[10px] font-bold text-white uppercase mb-2 border-b border-[var(--border)] pb-2">Configured Keys</div>
+                {allProviders.map(p => {
+                  const isConfigured = configuredProviders.includes(p)
+                  return (
+                    <div key={p} className="flex items-center justify-between py-1">
+                      <span className="text-xs text-zinc-400 capitalize">{p}</span>
+                      <span className={`text-[10px] font-bold ${isConfigured ? 'text-emerald-500' : 'text-zinc-600'}`}>
+                        {isConfigured ? 'READY' : 'MISSING'}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
           {/* Settings Button - Desktop */}
           <button

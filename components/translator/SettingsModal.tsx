@@ -1,29 +1,23 @@
 "use client"
 
+import { useState } from "react"
 import { useTranslation } from "@/lib/i18n/useTranslation"
 import type { ApiKeys } from "@/types"
 import { FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_STEP } from "@/lib/constants/providers"
+import { useAppSettings } from "@/store/useAppSettings"
 
 interface SettingsModalProps {
   isOpen: boolean
   onClose: () => void
-  apiKeys: ApiKeys
-  setApiKeys: (keys: ApiKeys) => void
-  fontSize: number
-  setFontSize: (size: number) => void
-  mounted: boolean
 }
 
 export default function SettingsModal({
   isOpen,
   onClose,
-  apiKeys,
-  setApiKeys,
-  fontSize,
-  setFontSize,
-  mounted
 }: SettingsModalProps) {
+  const { apiKeys, setApiKeys, fontSize, setFontSize, hasHydrated } = useAppSettings()
   const { t, locale, setLocale } = useTranslation()
+  const [customModelInputs, setCustomModelInputs] = useState<Record<string, string>>({})
 
   if (!isOpen) return null
 
@@ -62,7 +56,7 @@ export default function SettingsModal({
         {/* Font Size Slider */}
         <div className="mb-4">
           <label className="block text-xs font-bold text-zinc-500 uppercase mb-2">
-            {t("fontSize")}: {mounted ? fontSize : 14}px
+            {t("fontSize")}: {hasHydrated ? fontSize : 14}px
           </label>
           <div className="flex items-center gap-3">
             <span className="text-xs text-zinc-500">{FONT_SIZE_MIN}px</span>
@@ -71,7 +65,7 @@ export default function SettingsModal({
               min={FONT_SIZE_MIN}
               max={FONT_SIZE_MAX}
               step={FONT_SIZE_STEP}
-              value={mounted ? fontSize : 14}
+              value={hasHydrated ? fontSize : 14}
               onChange={(e) => setFontSize(Number(e.target.value))}
               className="flex-1 h-2 bg-[var(--background)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
             />
@@ -81,9 +75,9 @@ export default function SettingsModal({
             {fontSizeOptions.map((size) => (
               <button
                 key={size}
-                onClick={() => mounted && setFontSize(size)}
+                onClick={() => hasHydrated && setFontSize(size)}
                 className={`w-6 h-6 rounded-full text-[9px] font-medium transition-all ${
-                  mounted && fontSize === size
+                  hasHydrated && fontSize === size
                     ? "bg-[var(--primary)] text-white"
                     : "bg-[var(--background)] text-zinc-500 hover:bg-zinc-700"
                 }`}
@@ -158,9 +152,11 @@ export default function SettingsModal({
               </label>
               <input
                 type="text"
-                value={((apiKeys.customModels as any)?.[provider] || []).join(", ")}
+                value={customModelInputs[provider] ?? ((apiKeys.customModels as any)?.[provider] || []).join(", ")}
                 onChange={(e) => {
-                  const models = e.target.value.split(",").map((m: string) => m.trim()).filter(Boolean)
+                  const rawValue = e.target.value
+                  setCustomModelInputs(prev => ({ ...prev, [provider]: rawValue }))
+                  const models = rawValue.split(",").map((m: string) => m.trim()).filter(Boolean)
                   setApiKeys({ 
                     ...apiKeys, 
                     customModels: { ...apiKeys.customModels, [provider]: models.length > 0 ? models : undefined }

@@ -6,14 +6,14 @@ import { useToast } from "@/components/ui/Toast"
 interface ResultPanelProps {
   translatedText: string
   isTranslating: boolean
-  fontSize: number
+  error?: string | null
   t: (key: any) => string
 }
 
 export default function ResultPanel({
   translatedText,
   isTranslating,
-  fontSize,
+  error,
   t
 }: ResultPanelProps) {
   const { showToast } = useToast()
@@ -56,7 +56,15 @@ export default function ResultPanel({
         </div>
       </div>
       <div className="flex-1 min-h-0 p-6 relative overflow-y-auto custom-scrollbar">
-        {isTranslating && !translatedText ? (
+        {error ? (
+          <div className="flex flex-col items-center justify-center h-full text-red-500/80 p-4 text-center">
+            <svg className="w-10 h-10 mb-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span className="text-sm font-semibold mb-1">Error</span>
+            <span className="text-xs text-red-400/80">{error}</span>
+          </div>
+        ) : isTranslating && !translatedText ? (
           <div className="flex flex-col gap-3">
             <div className="h-4 bg-zinc-800/50 rounded-md animate-pulse w-3/4"></div>
             <div className="h-4 bg-zinc-800/50 rounded-md animate-pulse w-full"></div>
@@ -64,8 +72,7 @@ export default function ResultPanel({
           </div>
         ) : translatedText ? (
           <div 
-            className="text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all duration-300"
-            style={{ fontSize: `${fontSize}px` }}
+            className="text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all duration-300 text-[length:var(--app-font-size,14px)]"
           >
             {translatedText}
           </div>

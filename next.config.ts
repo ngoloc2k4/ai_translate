@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Security headers for API routes
+  // Security headers for all routes
   async headers() {
     return [
       {
-        source: '/api/:path*',
+        source: '/(.*)',
         headers: [
           {
             key: 'Strict-Transport-Security',
@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://generativelanguage.googleapis.com https://api.groq.com https://api.openai.com; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; upgrade-insecure-requests;",
           },
         ],
       },

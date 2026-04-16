@@ -1,7 +1,12 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { PROVIDERS, MODELS } from "@/lib/constants/providers"
 import type { ApiKeys } from "@/types"
+import SearchableSelect, { SearchableSelectOption } from "@/components/ui/SearchableSelect"
+import { useDynamicModels } from "@/hooks/useDynamicModels"
+import { useProviderConfig } from "@/hooks/useProviderConfig"
+import { useToast } from "@/components/ui/Toast"
 
 interface ControlBarProps {
   provider: string
@@ -24,14 +29,18 @@ export default function ControlBar({
   apiKeys,
   t
 }: ControlBarProps) {
-  const currentProvider = PROVIDERS.find((p) => p.id === provider)
-  const availableModels = MODELS[provider as keyof typeof MODELS] || []
-  const customModels = (apiKeys.customModels as any)?.[provider] || []
+  const { showToast } = useToast()
   
-  const allModels = [
-    ...availableModels.map(m => typeof m === 'string' ? { id: m, name: m } : m),
-    ...customModels.map((m: string) => ({ id: m, name: m }))
-  ]
+  const key = (apiKeys as any)[provider] || ""
+  const { models: fetchedModels, isFetching: isFetchingModels, error } = useDynamicModels(provider, key)
+
+  const { allModels } = useProviderConfig(provider, fetchedModels)
+
+  useEffect(() => {
+    if (error) {
+      showToast(error, "error")
+    }
+  }, [error, showToast])
 
   return (
     <section className="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-[var(--border)] bg-[var(--background)]">
@@ -44,7 +53,7 @@ export default function ControlBar({
                 key={p.id}
                 onClick={() => setProvider(p.id)}
                 title={p.name}
-                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-2 ${
+                className={`min-h-[44px] md:min-h-[32px] px-3 py-2 md:py-1.5 rounded-md transition-all flex items-center justify-center gap-2 ${
                   provider === p.id
                     ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20"
                     : "text-zinc-500 hover:text-zinc-300"
@@ -56,24 +65,22 @@ export default function ControlBar({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t("model")}</label>
-          <select
+        <div className="flex items-center gap-2 relative">
+          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+            {t("model")} {isFetchingModels && "..."}
+          </label>
+          <SearchableSelect
+            options={allModels}
             value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="px-3 py-1.5 rounded-lg bg-[var(--panel)] border border-[var(--border)] text-xs font-semibold text-zinc-200 outline-none cursor-pointer hover:border-zinc-600 transition-colors"
-          >
-            {allModels.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.name}
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setModel(val)}
+            placeholder={isFetchingModels ? "Loading..." : "Select model"}
+            searchPlaceholder="Search models..."
+          />
         </div>
 
 
         {/* Temperature Slidert */}
-        <div className="flex items-center gap-2 group relative">
+        <div className="flex items-center gap-2 group relative min-h-[44px] md:min-h-0">
           <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">TEMP: {temperature}</label>
           <input
             type="range"
