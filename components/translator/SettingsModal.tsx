@@ -54,13 +54,13 @@ export default function SettingsModal({
         </div>
 
         {/* Font Sizes Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          {/* Desktop Font Size */}
-          <div className="bg-[var(--background)] p-3 rounded-[10px] border border-[var(--border)]">
-            <label className="block text-[0.625rem] font-bold text-zinc-500 uppercase mb-2">
-              {t("fontSizeDesktop")}: {hasHydrated ? fontSize : 14}px
+        {/* Font Sizes Section */}
+        <div className="bg-[var(--background)] p-4 rounded-[10px] border border-[var(--border)] mb-6">
+          <div className="mb-2">
+            <label className="block text-[0.625rem] font-bold text-zinc-500 uppercase mb-3">
+              {t("fontSize")}: {hasHydrated ? fontSize : 14}px
             </label>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-4">
               <span className="text-[9px] text-zinc-500">{FONT_SIZE_MIN}px</span>
               <input
                 type="range"
@@ -68,54 +68,28 @@ export default function SettingsModal({
                 max={FONT_SIZE_MAX}
                 step={FONT_SIZE_STEP}
                 value={hasHydrated ? fontSize : 14}
-                onChange={(e) => setFontSize(Number(e.target.value))}
+                onChange={(e) => {
+                  const val = Number(e.target.value)
+                  setFontSize(val)
+                  setMobileFontSize(val)
+                }}
                 className="flex-1 h-1.5 bg-[var(--panel)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
               />
               <span className="text-[9px] text-zinc-500">{FONT_SIZE_MAX}px</span>
             </div>
-            <div className="flex justify-between">
-              {[12, 14, 16, 18, 20].map((size) => (
+            <div className="flex justify-between flex-wrap gap-2">
+              {[10, 12, 14, 16, 18, 20, 22, 24].map((size) => (
                 <button
                   key={size}
-                  onClick={() => hasHydrated && setFontSize(size)}
-                  className={`w-5 h-5 rounded-full text-[8px] font-medium transition-all ${
+                  onClick={() => {
+                    if (hasHydrated) {
+                      setFontSize(size)
+                      setMobileFontSize(size)
+                    }
+                  }}
+                  className={`w-7 h-7 rounded-full text-[9px] font-bold transition-all ${
                     hasHydrated && fontSize === size
-                      ? "bg-[var(--primary)] text-white"
-                      : "bg-[var(--panel)] text-zinc-500 hover:bg-zinc-700 hover:text-white"
-                  }`}
-                >
-                  {size}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile Font Size */}
-          <div className="bg-[var(--background)] p-3 rounded-[10px] border border-[var(--border)]">
-            <label className="block text-[0.625rem] font-bold text-zinc-500 uppercase mb-2">
-              {t("fontSizeMobile")}: {hasHydrated ? mobileFontSize : 16}px
-            </label>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-[9px] text-zinc-500">{FONT_SIZE_MIN}px</span>
-              <input
-                type="range"
-                min={FONT_SIZE_MIN}
-                max={FONT_SIZE_MAX}
-                step={FONT_SIZE_STEP}
-                value={hasHydrated ? mobileFontSize : 16}
-                onChange={(e) => setMobileFontSize(Number(e.target.value))}
-                className="flex-1 h-1.5 bg-[var(--panel)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
-              />
-              <span className="text-[9px] text-zinc-500">{FONT_SIZE_MAX}px</span>
-            </div>
-            <div className="flex justify-between">
-              {[12, 14, 16, 18, 20].map((size) => (
-                <button
-                  key={size}
-                  onClick={() => hasHydrated && setMobileFontSize(size)}
-                  className={`w-5 h-5 rounded-full text-[8px] font-medium transition-all ${
-                    hasHydrated && mobileFontSize === size
-                      ? "bg-[var(--primary)] text-white"
+                      ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/30"
                       : "bg-[var(--panel)] text-zinc-500 hover:bg-zinc-700 hover:text-white"
                   }`}
                 >

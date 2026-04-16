@@ -48,13 +48,13 @@ export default function ControlBar({
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
           <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">{t("provider")}</label>
-          <div className="flex p-1 rounded-lg bg-[var(--panel)] border border-[var(--border)]">
+          <div className="flex p-1 rounded-lg bg-[var(--panel)] border border-[var(--border)] overflow-x-auto custom-scrollbar max-w-full">
             {PROVIDERS.map((p) => (
               <button
                 key={p.id}
                 onClick={() => setProvider(p.id)}
                 title={p.name}
-                className={`min-h-[44px] md:min-h-[32px] px-3 py-2 md:py-1.5 rounded-md transition-all flex items-center justify-center gap-2 ${
+                className={`min-h-[44px] md:min-h-[32px] px-3 py-2 md:py-1.5 rounded-md transition-all flex items-center justify-center gap-2 flex-shrink-0 ${
                   provider === p.id
                     ? "bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/20"
                     : "text-zinc-500 hover:text-zinc-300"

@@ -37,11 +37,10 @@ export async function proxy(request: NextRequest) {
 
 async function handleApiRoute(request: NextRequest, pathname: string) {
   // 1. Session Authentication Check
-  const correctUsername = process.env.APP_USERNAME
   const correctPassword = process.env.APP_PASSWORD
 
   // Skip auth checks for /api/auth and generic /api/ test routes if any
-  if (pathname !== "/api/auth" && correctUsername && correctPassword) {
+  if (pathname !== "/api/auth" && correctPassword) {
     if (pathname.startsWith('/api/translate') || pathname.startsWith('/api/models') || pathname.startsWith('/api/keys')) {
       const sessionCookie = request.cookies.get("ai_translate_session")?.value
 

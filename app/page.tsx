@@ -7,6 +7,7 @@ import { useAppSettings } from "@/store/useAppSettings"
 export default function Home() {
   const { apiKeys, serverKeys, setServerKeys } = useAppSettings()
   const [showStatus, setShowStatus] = useState(false)
+  const [isMobilePopupOpen, setIsMobilePopupOpen] = useState(false)
 
   useEffect(() => {
     async function fetchServerKeys() {
@@ -28,6 +29,7 @@ export default function Home() {
     serverKeys[p] || (apiKeys as any)[p] || (p === "custom" && apiKeys.customEndpoint)
   )
   const hasKeys = configuredProviders.length > 0
+
   return (
     <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Header */}
@@ -41,16 +43,54 @@ export default function Home() {
           <h1 className="text-sm font-bold tracking-tight text-white uppercase">
             AI Translation Lab
           </h1>
-          {/* Mobile API Status Indicator */}
-          <div className="md:hidden flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--panel)] border border-[var(--border)]">
-            <div className={`w-1.5 h-1.5 rounded-full ${hasKeys ? "bg-emerald-500" : "bg-amber-500"}`}></div>
-          </div>
+          
+          {/* Mobile API Status Badge */}
+          <button 
+            onClick={() => setIsMobilePopupOpen(true)}
+            className="md:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[var(--panel)] border border-[var(--border)] active:scale-95 transition-all"
+          >
+            <div className={`w-1.5 h-1.5 rounded-full ${hasKeys ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "bg-amber-500"}`}></div>
+            <span className="text-[9px] font-bold text-zinc-400">API</span>
+          </button>
+
           <nav className="hidden md:flex items-center gap-5 ml-8">
             <a className="text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors" href="/history">
               History
             </a>
           </nav>
         </div>
+        
+        {/* Mobile Detailed Status Popup */}
+        {isMobilePopupOpen && (
+          <div className="md:hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm" onClick={() => setIsMobilePopupOpen(false)}>
+            <div className="w-full max-w-xs bg-[var(--panel)] rounded-[20px] border border-[var(--border)] p-5 shadow-2xl" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-4 border-b border-[var(--border)] pb-3">
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Provider Status</h3>
+                <button onClick={() => setIsMobilePopupOpen(false)} className="text-zinc-500 p-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <div className="space-y-3">
+                {allProviders.map(p => {
+                  const isConfigured = configuredProviders.includes(p)
+                  return (
+                    <div key={p} className="flex items-center justify-between">
+                      <span className="text-xs text-zinc-300 capitalize">{p}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isConfigured ? 'bg-emerald-500/10 text-emerald-500' : 'bg-zinc-500/10 text-zinc-500'}`}>
+                          {isConfigured ? 'READY' : 'MISSING'}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+              <p className="text-[9px] text-zinc-500 mt-6 text-center leading-relaxed italic">
+                You can configure these in the Settings menu
+              </p>
+            </div>
+          </div>
+        )}
         <div className="flex items-center gap-3">
           {/* API Key Status - Desktop */}
           <div 

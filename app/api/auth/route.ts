@@ -2,12 +2,10 @@ import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
   try {
-    const { username, password } = await request.json()
-
-    const correctUsername = process.env.APP_USERNAME
+    const { password } = await request.json()
     const correctPassword = process.env.APP_PASSWORD
 
-    if (!correctUsername || !correctPassword) {
+    if (!correctPassword) {
       // If server does not have auth enabled, reject manual login attempts
       return NextResponse.json(
         { success: false, error: "Server authentication is not configured" },
@@ -15,7 +13,7 @@ export async function POST(request: Request) {
       )
     }
 
-    if (username === correctUsername && password === correctPassword) {
+    if (password === correctPassword) {
       // Create a simplified generic token since this is for personal use over HTTPS
       // The token is just the password itself, acting as a bearer secret
       const token = correctPassword
@@ -34,7 +32,7 @@ export async function POST(request: Request) {
     }
 
     return NextResponse.json(
-      { success: false, error: "Invalid username or password" },
+      { success: false, error: "Invalid password" },
       { status: 401 }
     )
   } catch (error) {
