@@ -9,6 +9,7 @@ import { LANGUAGES } from "@/lib/constants/languages"
 import { MAX_CHARACTERS, MODELS } from "@/lib/constants/providers"
 import { useAppSettings } from "@/store/useAppSettings"
 import type { ApiKeys } from "@/types"
+import { shouldShowToast } from "@/lib/utils/throttledToast"
 
 // Decomposed Components
 import SettingsModal from "./translator/SettingsModal"
@@ -22,7 +23,7 @@ import Footer from "./translator/Footer"
 export default function TranslatorPanel() {
   const { t } = useI18n()
   const { showToast } = useToast()
-  const { result, loading, error, translate, reset, stop } = useTranslation()
+  const { result, loading, error, setError, translate, reset, stop } = useTranslation()
 
   const { fontSize, setFontSize, apiKeys, setApiKeys, serverKeys, hasHydrated } = useAppSettings()
   const [mounted, setMounted] = useState(false)
@@ -101,14 +102,16 @@ export default function TranslatorPanel() {
           if (!text.trim()) return
 
           if (text.length > MAX_CHARACTERS) {
-            showToast(t("textTooLong"), "error")
+            if (shouldShowToast('text_too_long')) {
+              showToast(t("textTooLong"), "error")
+            }
             return
           }
 
           const apiKey = apiKeysRef.current[providerRef.current as keyof ApiKeys] as string
           const hasServerKey = serverKeysRef.current[providerRef.current]
           if (!apiKey && !hasServerKey) {
-            showToast(t("invalidApiKey"), "error")
+            setError(t("invalidApiKey"))
             setShowSettings(true)
             return
           }
@@ -139,14 +142,16 @@ export default function TranslatorPanel() {
     if (!sourceText.trim()) return
 
     if (sourceText.length > MAX_CHARACTERS) {
-      showToast(t("textTooLong"), "error")
+      if (shouldShowToast('text_too_long')) {
+        showToast(t("textTooLong"), "error")
+      }
       return
     }
 
     const apiKey = apiKeys[provider as keyof ApiKeys] as string
     const hasServerKey = serverKeys[provider]
     if (!apiKey && !hasServerKey) {
-      showToast(t("invalidApiKey"), "error")
+      setError(t("invalidApiKey"))
       setShowSettings(true)
       return
     }

@@ -21,8 +21,8 @@ import { checkRateLimit } from "@/lib/utils/rateLimit"
 export async function proxy(request: NextRequest) {
   const url = new URL(request.url)
   const { pathname } = url
-  
-  const response = pathname.startsWith('/api/') 
+
+  const response = pathname.startsWith('/api/')
     ? await handleApiRoute(request, pathname)
     : NextResponse.next()
 
@@ -31,7 +31,7 @@ export async function proxy(request: NextRequest) {
   response.headers.set('X-Frame-Options', 'DENY')
   response.headers.set('X-XSS-Protection', '1; mode=block')
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  
+
   return response
 }
 
@@ -44,19 +44,19 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
   if (pathname !== "/api/auth" && correctUsername && correctPassword) {
     if (pathname.startsWith('/api/translate') || pathname.startsWith('/api/models') || pathname.startsWith('/api/keys')) {
       const sessionCookie = request.cookies.get("ai_translate_session")?.value
-      
+
       if (sessionCookie !== correctPassword) {
         return new NextResponse(
-          JSON.stringify({ success: false, error: "Unauthorized access. Please login via /login first." }), 
+          JSON.stringify({ success: false, error: "You don't have API, please fill it in settings." }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         )
       }
     }
   }
 
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] || 
-             request.headers.get("x-real-ip") || 
-             "127.0.0.1"
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0] ||
+    request.headers.get("x-real-ip") ||
+    "127.0.0.1"
 
   if (pathname.startsWith("/api/translate")) {
     try {
@@ -79,12 +79,12 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
       console.error("Upstash Rate Limiter Error:", err)
     }
   }
-  
+
   const { allowed, remaining, resetTime, limit } = checkRateLimit(ip, pathname)
-  
+
   if (!allowed) {
     return NextResponse.json(
-      { 
+      {
         error: "Rate limit exceeded",
         message: "Too many requests. Please try again later.",
         retryAfter: Math.ceil((resetTime - Date.now()) / 1000)
@@ -100,14 +100,14 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
       }
     )
   }
-  
+
   const response = NextResponse.next()
-  
+
   // Set rate limit headers
   response.headers.set('X-RateLimit-Limit', String(limit))
   response.headers.set('X-RateLimit-Remaining', String(remaining))
   response.headers.set('X-RateLimit-Reset', String(Math.ceil(resetTime / 1000)))
-  
+
   return response
 }
 

@@ -8,22 +8,22 @@ export const translations = {
     history: "Lịch sử",
     apiKeys: "Khóa API",
     docs: "Tài liệu",
-    
+
     // Language selector
     sourceLanguage: "Ngôn ngữ nguồn",
     targetLanguage: "Ngôn ngữ đích",
     autoDetect: "Tự động phát hiện",
     swapLanguages: "Đổi ngôn ngữ",
-    
+
     // Provider & Model
     provider: "Nhà cung cấp",
     model: "Mô hình",
-    
+
     // Tone & Mode
     tone: "Giọng điệu",
     mode: "Chế độ",
     creativity: "Sáng tạo",
-    
+
     // Actions
     translate: "DỊCH",
     cancel: "HỦY",
@@ -33,28 +33,28 @@ export const translations = {
     speak: "Đọc",
     share: "Chia sẻ",
     settings: "Cài đặt",
-    
+
     // Placeholders
     sourcePlaceholder: "Dán văn bản nguồn hoặc tài liệu kỹ thuật vào đây...",
     outputPlaceholder: "Bản dịch sẽ xuất hiện ở đây...",
-    
+
     // Status
     ready: "Sẵn sàng",
     translating: "Đang dịch...",
     streaming: "Đang truyền",
     latency: "ĐỘ TRỄ",
-    
+
     // Stats
     chars: "KÝ TỰ",
     input: "VÀO",
     output: "RA",
     total: "TỔNG",
-    
+
     // Messages
-    invalidApiKey: "Vui lòng đặt khóa API của bạn trong cài đặt",
+    invalidApiKey: "Chưa có API key, hãy nhập API key trong Settings.",
     translationError: "Dịch thất bại: ",
     textTooLong: "Văn bản vượt quá độ dài tối đa",
-    
+
     // Settings
     apiKeyTitle: "Khóa API",
     geminiApiKey: "Khóa API Google Gemini",
@@ -65,17 +65,17 @@ export const translations = {
     medium: "Trung bình",
     large: "Lớn",
     language: "Ngôn ngữ",
-    
+
     // History
     todaysHistory: "Lịch sử hôm nay",
     clearAll: "Xóa tất cả",
-    
+
     // Mobile nav
     navTranslate: "Dịch",
     navHistory: "Lịch sử",
     navSaved: "Đã lưu",
     navAPI: "API",
-    
+
     // Tones
     toneDefault: "Mặc định",
     toneAcademic: "Học thuật",
@@ -90,7 +90,7 @@ export const translations = {
     tonePresentation: "Thuyết trình",
     toneProfessional: "Chuyên nghiệp",
     toneSerious: "Nghiêm túc",
-    
+
     // Modes
     modeDefault: "Mặc định",
     modeBilingual: "Song ngữ",
@@ -100,7 +100,7 @@ export const translations = {
     modeRewriting: "Viết lại",
     modeStrictness: "Nghiêm ngặt",
     modeSummarizing: "Tóm tắt",
-    
+
     // Creativity
     creativityLow: "Thấp",
     creativityDefault: "Mặc định",
@@ -129,22 +129,22 @@ export const translations = {
     history: "History",
     apiKeys: "API Keys",
     docs: "Docs",
-    
+
     // Language selector
     sourceLanguage: "Source Language",
     targetLanguage: "Target Language",
     autoDetect: "Auto detect",
     swapLanguages: "Swap languages",
-    
+
     // Provider & Model
     provider: "Provider",
     model: "Model",
-    
+
     // Tone & Mode
     tone: "Tone",
     mode: "Mode",
     creativity: "Creativity",
-    
+
     // Actions
     translate: "TRANSLATE",
     cancel: "CANCEL",
@@ -154,28 +154,28 @@ export const translations = {
     speak: "Read",
     share: "Share",
     settings: "Settings",
-    
+
     // Placeholders
     sourcePlaceholder: "Paste source text or technical documentation here...",
     outputPlaceholder: "Translation will appear here...",
-    
+
     // Status
     ready: "Ready",
     translating: "Translating...",
     streaming: "Streaming",
     latency: "LATENCY",
-    
+
     // Stats
     chars: "CHARS",
     input: "IN",
     output: "OUT",
     total: "TOTAL",
-    
+
     // Messages
-    invalidApiKey: "Please set your API key in settings",
+    invalidApiKey: "Missing API key, please fill it in settings.",
     translationError: "Translation failed: ",
     textTooLong: "Text exceeds maximum length",
-    
+
     // Settings
     apiKeyTitle: "API Keys",
     geminiApiKey: "Google Gemini API Key",
@@ -186,17 +186,17 @@ export const translations = {
     medium: "Medium",
     large: "Large",
     language: "Language",
-    
+
     // History
     todaysHistory: "Today's History",
     clearAll: "Clear All",
-    
+
     // Mobile nav
     navTranslate: "Translate",
     navHistory: "History",
     navSaved: "Saved",
     navAPI: "API",
-    
+
     // Tones
     toneDefault: "Default",
     toneAcademic: "Academic",
@@ -211,7 +211,7 @@ export const translations = {
     tonePresentation: "Presentation",
     toneProfessional: "Professional",
     toneSerious: "Serious",
-    
+
     // Modes
     modeDefault: "Default",
     modeBilingual: "Bilingual",
@@ -221,7 +221,7 @@ export const translations = {
     modeRewriting: "Rewriting",
     modeStrictness: "Strictness",
     modeSummarizing: "Summarizing",
-    
+
     // Creativity
     creativityLow: "Low",
     creativityDefault: "Default",
@@ -250,22 +250,22 @@ export const translations = {
     history: "기록",
     apiKeys: "API 키",
     docs: "문서",
-    
+
     // Language selector
     sourceLanguage: "원본 언어",
     targetLanguage: "목표 언어",
     autoDetect: "자동 감지",
     swapLanguages: "언어 교환",
-    
+
     // Provider & Model
     provider: "공급자",
     model: "모델",
-    
+
     // Tone & Mode
     tone: "어조",
     mode: "모드",
     creativity: "창의성",
-    
+
     // Actions
     translate: "번역",
     cancel: "취소",
@@ -275,28 +275,28 @@ export const translations = {
     speak: "읽기",
     share: "공유",
     settings: "설정",
-    
+
     // Placeholders
     sourcePlaceholder: "원본 텍스트 또는 기술 문서를 여기에 붙여넣으세요...",
     outputPlaceholder: "번역 결과가 여기에 표시됩니다...",
-    
+
     // Status
     ready: "준비됨",
     translating: "번역 중...",
     streaming: "스트리밍",
     latency: "지연 시간",
-    
+
     // Stats
     chars: "문자",
     input: "입력",
     output: "출력",
     total: "합계",
-    
+
     // Messages
     invalidApiKey: "설정에서 API 키를 설정해주세요",
     translationError: "번역 실패: ",
     textTooLong: "텍스트가 최대 길이를 초과했습니다",
-    
+
     // Settings
     apiKeyTitle: "API 키",
     geminiApiKey: "Google Gemini API 키",
@@ -307,17 +307,17 @@ export const translations = {
     medium: "중간",
     large: "크게",
     language: "언어",
-    
+
     // History
     todaysHistory: "오늘의 기록",
     clearAll: "모두 지우기",
-    
+
     // Mobile nav
     navTranslate: "번역",
     navHistory: "기록",
     navSaved: "저장됨",
     navAPI: "API",
-    
+
     // Tones
     toneDefault: "기본",
     toneAcademic: "학술적",
@@ -332,7 +332,7 @@ export const translations = {
     tonePresentation: "프레젠테이션",
     toneProfessional: "전문적인",
     toneSerious: "진지한",
-    
+
     // Modes
     modeDefault: "기본",
     modeBilingual: "이중 언어",
@@ -342,7 +342,7 @@ export const translations = {
     modeRewriting: "재작성",
     modeStrictness: "엄격함",
     modeSummarizing: "요약",
-    
+
     // Creativity
     creativityLow: "낮음",
     creativityDefault: "기본",

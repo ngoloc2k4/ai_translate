@@ -66,3 +66,8 @@ htmlcov/
 *.tar.xz
 *.tar.zst
 next-env.d.ts
+.gitnexus
+.claude
+CLAUDE.md
+AGENTS.md
+GEMINI.md

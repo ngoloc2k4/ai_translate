@@ -144,6 +144,7 @@ export function useTranslation() {
     result,
     loading,
     error,
+    setError,
     translate,
     stop,
     reset,

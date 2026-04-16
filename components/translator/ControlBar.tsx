@@ -7,6 +7,7 @@ import SearchableSelect, { SearchableSelectOption } from "@/components/ui/Search
 import { useDynamicModels } from "@/hooks/useDynamicModels"
 import { useProviderConfig } from "@/hooks/useProviderConfig"
 import { useToast } from "@/components/ui/Toast"
+import { shouldShowToast } from "@/lib/utils/throttledToast"
 
 interface ControlBarProps {
   provider: string
@@ -37,7 +38,7 @@ export default function ControlBar({
   const { allModels } = useProviderConfig(provider, fetchedModels)
 
   useEffect(() => {
-    if (error) {
+    if (error && shouldShowToast('control_bar_error')) {
       showToast(error, "error")
     }
   }, [error, showToast])
