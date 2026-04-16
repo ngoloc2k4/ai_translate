@@ -15,7 +15,7 @@ interface FooterProps {
 
 export default function Footer({ stats, isReady = true, latency = "420MS", t }: FooterProps) {
   return (
-    <footer className="h-[32px] min-h-[32px] border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between px-4 text-[10px] uppercase tracking-wider text-zinc-500 font-medium">
+    <footer className="min-h-[2rem] border-t border-[var(--border)] bg-[var(--background)] flex items-center justify-between px-4 text-[0.625rem] uppercase tracking-wider text-zinc-500 font-medium overflow-hidden">
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
           <div className={`w-1.5 h-1.5 rounded-full ${isReady ? 'bg-emerald-500' : 'bg-amber-500'}`}></div>
@@ -27,7 +27,7 @@ export default function Footer({ stats, isReady = true, latency = "420MS", t }: 
           <span className="text-zinc-400 font-mono">{latency}</span>
         </div>
       </div>
-      <div className="flex items-center gap-6 font-mono text-[9px]">
+      <div className="flex items-center gap-6 font-mono text-[0.5625rem]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <span className="text-zinc-600">{t("input")}:</span>

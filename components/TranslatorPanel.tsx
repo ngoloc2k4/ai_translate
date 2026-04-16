@@ -25,7 +25,8 @@ export default function TranslatorPanel() {
   const { showToast } = useToast()
   const { result, loading, error, setError, translate, reset, stop } = useTranslation()
 
-  const { fontSize, setFontSize, apiKeys, setApiKeys, serverKeys, hasHydrated } = useAppSettings()
+  const { fontSize, setFontSize, mobileFontSize, setMobileFontSize, apiKeys, setApiKeys, serverKeys, hasHydrated } = useAppSettings()
+  const [isMobile, setIsMobile] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [savedProvider, setSavedProvider] = useLocalStorage<"gemini" | "groq" | "nvidia" | "openrouter" | "custom">("ai_translate_provider", "gemini")
   const [savedModel, setSavedModel] = useLocalStorage<string>("ai_translate_model", "gemini-2.5-flash")
@@ -74,6 +75,14 @@ export default function TranslatorPanel() {
     setMounted(true)
   }, [])
 
+  // Responsive font size detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener("resize", checkMobile)
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
   // Sync with local storage
   useEffect(() => {
     if (mounted) {
@@ -81,6 +90,14 @@ export default function TranslatorPanel() {
       setSavedModel(model)
     }
   }, [provider, model, mounted, setSavedProvider, setSavedModel])
+
+  // System-wide font scaling
+  useEffect(() => {
+    if (mounted) {
+      const size = isMobile ? mobileFontSize : fontSize
+      document.documentElement.style.setProperty('--font-size-base', `${size}px`)
+    }
+  }, [fontSize, mobileFontSize, isMobile, mounted])
 
   // Listen for global settings event
   useEffect(() => {
@@ -179,8 +196,7 @@ export default function TranslatorPanel() {
 
   return (
     <div 
-      className="flex-1 flex flex-col min-h-0 overflow-hidden gap-4"
-      style={{ '--app-font-size': `${fontSize}px` } as React.CSSProperties}
+      className="flex-1 flex flex-col min-h-0 overflow-hidden gap-4 pb-[env(safe-area-inset-bottom)]"
     >
       <SettingsModal
         isOpen={showSettings}
@@ -236,15 +252,17 @@ export default function TranslatorPanel() {
       </div>
 
       <MobileNav />
-      <Footer 
-        stats={{
-          in: sourceText.length,
-          out: result.length,
-          total: sourceText.length + result.length
-        }}
-        isReady={!loading}
-        t={t}
-      />
+      <div className="hidden md:block">
+        <Footer 
+          stats={{
+            in: sourceText.length,
+            out: result.length,
+            total: sourceText.length + result.length
+          }}
+          isReady={!loading}
+          t={t}
+        />
+      </div>
     </div>
   )
 }

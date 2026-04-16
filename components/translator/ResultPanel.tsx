@@ -34,14 +34,14 @@ export default function ResultPanel({
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[20px] shadow-sm relative overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--panel)]/50">
-        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t("translated")}</span>
+        <span className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-widest">{t("translated")}</span>
         <div className="flex items-center gap-1.5">
           {translatedText && (
             <button
               onClick={handleCopy}
               className="p-1.5 rounded-md hover:bg-[var(--background)] transition-colors text-zinc-500 hover:text-zinc-300 flex items-center gap-1.5"
             >
-              <span className="text-[10px] font-bold uppercase">{copied ? t("copied") : t("copy")}</span>
+              <span className="text-[0.625rem] font-bold uppercase">{copied ? t("copied") : t("copy")}</span>
               {copied ? (
                 <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -72,7 +72,7 @@ export default function ResultPanel({
           </div>
         ) : translatedText ? (
           <div 
-            className="text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all duration-300 text-[length:var(--app-font-size,14px)]"
+            className="text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all duration-300 text-[1rem]"
           >
             {translatedText}
           </div>

@@ -95,7 +95,7 @@ export default function SearchableSelect({
                 >
                   <div className="truncate">{o.name}</div>
                   {o.name !== o.id && (
-                    <div className="text-[9px] text-zinc-500 truncate mt-0.5">{o.id}</div>
+                    <div className="text-[0.5625rem] text-zinc-500 truncate mt-0.5">{o.id}</div>
                   )}
                 </button>
               ))

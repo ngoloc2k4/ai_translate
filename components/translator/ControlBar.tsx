@@ -47,7 +47,7 @@ export default function ControlBar({
     <section className="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-[var(--border)] bg-[var(--background)]">
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex items-center gap-2">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">{t("provider")}</label>
+          <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">{t("provider")}</label>
           <div className="flex p-1 rounded-lg bg-[var(--panel)] border border-[var(--border)]">
             {PROVIDERS.map((p) => (
               <button
@@ -60,14 +60,14 @@ export default function ControlBar({
                     : "text-zinc-500 hover:text-zinc-300"
                 }`}
               >
-                <span className="text-[11px] font-bold whitespace-nowrap">{p.name}</span>
+                <span className="text-[0.6875rem] font-bold whitespace-nowrap">{p.name}</span>
               </button>
             ))}
           </div>
         </div>
 
         <div className="flex items-center gap-2 relative">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">
+          <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">
             {t("model")} {isFetchingModels && "..."}
           </label>
           <SearchableSelect
@@ -82,7 +82,7 @@ export default function ControlBar({
 
         {/* Temperature Slidert */}
         <div className="flex items-center gap-2 group relative min-h-[44px] md:min-h-0">
-          <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">TEMP: {temperature}</label>
+          <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">TEMP: {temperature}</label>
           <input
             type="range"
             min="0"

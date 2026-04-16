@@ -71,3 +71,5 @@ next-env.d.ts
 CLAUDE.md
 AGENTS.md
 GEMINI.md
+docs/
+docs/*

@@ -20,7 +20,7 @@ export default function SourcePanel({
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[20px] shadow-sm relative group overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--panel)]/50">
-        <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t("source")}</span>
+        <span className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-widest">{t("source")}</span>
         <button
           onClick={() => setSourceText("")}
           className="text-zinc-600 hover:text-zinc-300 transition-colors"
@@ -35,10 +35,10 @@ export default function SourcePanel({
           value={sourceText}
           onChange={(e) => setSourceText(e.target.value)}
           placeholder={t("startTyping")}
-          className="flex-1 w-full bg-transparent border-none outline-none text-white resize-none scroll-smooth custom-scrollbar leading-relaxed text-[length:var(--app-font-size,14px)]"
+          className="flex-1 w-full bg-transparent border-none outline-none text-white resize-none scroll-smooth custom-scrollbar leading-relaxed text-[1rem]"
         />
         <div className="mt-4 flex items-center justify-between pointer-events-none">
-          <span className="text-[10px] font-mono text-zinc-600 uppercase">
+          <span className="text-[0.625rem] font-mono text-zinc-600 uppercase">
             CHARS: {sourceText.length} / 5000
           </span>
           <div className="flex gap-2">

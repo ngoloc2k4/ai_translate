@@ -29,7 +29,7 @@ export default function Home() {
   )
   const hasKeys = configuredProviders.length > 0
   return (
-    <div className="min-h-screen flex flex-col overflow-hidden">
+    <div className="h-[100dvh] flex flex-col overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-2.5 border-b border-[var(--border)] bg-[var(--background)]">
         <div className="flex items-center gap-4">
@@ -41,6 +41,10 @@ export default function Home() {
           <h1 className="text-sm font-bold tracking-tight text-white uppercase">
             AI Translation Lab
           </h1>
+          {/* Mobile API Status Indicator */}
+          <div className="md:hidden flex items-center gap-1.5 px-2 py-1 rounded-full bg-[var(--panel)] border border-[var(--border)]">
+            <div className={`w-1.5 h-1.5 rounded-full ${hasKeys ? "bg-emerald-500" : "bg-amber-500"}`}></div>
+          </div>
           <nav className="hidden md:flex items-center gap-5 ml-8">
             <a className="text-xs font-semibold text-zinc-500 hover:text-zinc-300 transition-colors" href="/history">
               History
