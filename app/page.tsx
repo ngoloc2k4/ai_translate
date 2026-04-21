@@ -24,9 +24,10 @@ export default function Home() {
     fetchServerKeys()
   }, [])
 
+  // Priority: Client API key from Settings > Server-side key (requires login)
   const allProviders = ["gemini", "groq", "nvidia", "openrouter", "custom"]
   const configuredProviders = allProviders.filter(p => 
-    serverKeys[p] || (apiKeys as any)[p] || (p === "custom" && apiKeys.customEndpoint)
+    (apiKeys as any)[p] || (p === "custom" && apiKeys.customEndpoint) || serverKeys[p]
   )
   const hasKeys = configuredProviders.length > 0
 

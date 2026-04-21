@@ -8,6 +8,7 @@ import { useDynamicModels } from "@/hooks/useDynamicModels"
 import { useProviderConfig } from "@/hooks/useProviderConfig"
 import { useToast } from "@/components/ui/Toast"
 import { shouldShowToast } from "@/lib/utils/throttledToast"
+import { useAppSettings } from "@/store/useAppSettings"
 
 interface ControlBarProps {
   provider: string
@@ -31,9 +32,17 @@ export default function ControlBar({
   t
 }: ControlBarProps) {
   const { showToast } = useToast()
+  const { serverKeys } = useAppSettings()
   
-  const key = (apiKeys as any)[provider] || ""
-  const { models: fetchedModels, isFetching: isFetchingModels, error } = useDynamicModels(provider, key)
+  // Priority: Settings API key > Server-side key
+  // If user has set a key in Settings, use that; otherwise fall back to server key
+  const clientKey = (apiKeys as any)[provider] || ""
+  const hasServerKey = !!serverKeys[provider]
+  const hasClientKey = !!clientKey
+  
+  // Pass client key if available, otherwise empty string (server will use server-side key)
+  const keyToUse = hasClientKey ? clientKey : ""
+  const { models: fetchedModels, isFetching: isFetchingModels, error } = useDynamicModels(provider, keyToUse, hasServerKey)
 
   const { allModels } = useProviderConfig(provider, fetchedModels)
 

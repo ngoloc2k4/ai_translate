@@ -3,6 +3,20 @@ import { getApiKeyToUse } from "@/lib/utils/validateKey"
 import { logError } from "@/lib/utils/logger"
 
 /**
+ * Check if user is authenticated via session cookie
+ */
+function isAuthenticated(request: NextRequest): boolean {
+  const sessionCookie = request.cookies.get("ai_translate_session")?.value
+  const correctPassword = process.env.APP_PASSWORD
+  
+  // If no password is set on server, no authentication needed
+  if (!correctPassword) return true
+  
+  // Check if session cookie matches the password
+  return sessionCookie === correctPassword
+}
+
+/**
  * Common schema for standard OpenAI-compatible `/models` response
  */
 interface OpenAiModelsResponse {
@@ -42,6 +56,19 @@ export async function GET(req: NextRequest) {
 
     if (provider === "custom") {
       return NextResponse.json({ data: [] })
+    }
+
+    // Check if client provided their own API key
+    const hasClientKey = !!clientKey && clientKey.trim().length > 0
+    
+    // If no client key, check if user is authenticated to use server-side keys
+    if (!hasClientKey) {
+      const isAuthed = isAuthenticated(req)
+      if (!isAuthed) {
+        // User is not authenticated and didn't provide their own key
+        // Return empty data - frontend will fallback to static lists
+        return NextResponse.json({ data: [], requiresAuth: true })
+      }
     }
 
     const apiKey = getApiKeyToUse(provider, clientKey)
