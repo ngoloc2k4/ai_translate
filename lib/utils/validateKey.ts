@@ -110,15 +110,22 @@ function validateKeyFormat(provider: string, key: string): boolean {
 
 /**
  * Get the API key to use (server-side or client-provided).
+ * Priority: Client-provided key > Server-side key
+ * If user provides a key in Settings, use that; otherwise fall back to server key.
  */
 export function getApiKeyToUse(provider: string, clientKey?: string): string | undefined {
-  const serverKey = getServerSideApiKey(provider)
+  // Priority: Client-provided key takes precedence
+  if (clientKey && clientKey.trim().length > 0) {
+    return clientKey
+  }
 
+  // Fall back to server-side key
+  const serverKey = getServerSideApiKey(provider)
   if (serverKey) {
     return serverKey
   }
 
-  return clientKey
+  return undefined
 }
 
 /**

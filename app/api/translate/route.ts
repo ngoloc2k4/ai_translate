@@ -6,6 +6,20 @@ import { validateApiKeyAsync, getApiKeyToUse } from "@/lib/utils/validateKey"
 import { sanitizeInput, sanitizeLanguageCode, sanitizeProvider, sanitizeModel, detectPromptInjection } from "@/lib/utils/sanitizeInput"
 import { logRequest, logAuth, logSecurity, logError } from "@/lib/utils/logger"
 
+/**
+ * Check if user is authenticated via session cookie
+ */
+function isAuthenticated(request: NextRequest): boolean {
+  const sessionCookie = request.cookies.get("ai_translate_session")?.value
+  const correctPassword = process.env.APP_PASSWORD
+  
+  // If no password is set on server, no authentication needed
+  if (!correctPassword) return true
+  
+  // Check if session cookie matches the password
+  return sessionCookie === correctPassword
+}
+
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
   
@@ -50,6 +64,20 @@ export async function POST(req: NextRequest) {
     if (detectPromptInjection(text)) {
       const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown"
       logSecurity('Potential prompt injection detected', { ip, provider })
+    }
+
+    // Check if client provided their own API key
+    const hasClientKey = !!clientApiKey && clientApiKey.trim().length > 0
+    
+    // If no client key, check if user is authenticated to use server-side keys
+    if (!hasClientKey) {
+      const isAuthed = isAuthenticated(req)
+      if (!isAuthed) {
+        logAuth('failure', { provider, reason: 'no_auth_for_server_key' })
+        return NextResponse.json({ 
+          error: "Authentication required to use server-side API keys. Please login or provide your own API key in Settings." 
+        }, { status: 401 })
+      }
     }
 
     // Validate API key

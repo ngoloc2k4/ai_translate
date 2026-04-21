@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Enable proxy for Next.js 16+ (replaces middleware)
+  experimental: {
+    proxy: true,
+  },
   // Security headers for all routes
   async headers() {
     return [

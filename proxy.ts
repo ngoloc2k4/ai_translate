@@ -12,7 +12,10 @@ const ratelimit = hasUpstashConfig ? new Ratelimit({
 
 
 /**
- * Next.js Middleware for Security and Rate Limiting (Next.js 16+)
+ * Next.js Proxy for Security and Rate Limiting (Next.js 16+)
+ * 
+ * IMPORTANT: Server-side API keys can ONLY be used when user is authenticated via password login.
+ * Client-provided API keys in Settings work without authentication.
  */
 
 import { checkRateLimit } from "@/lib/utils/rateLimit"
@@ -36,17 +39,32 @@ export async function proxy(request: NextRequest) {
 }
 
 async function handleApiRoute(request: NextRequest, pathname: string) {
-  // 1. Session Authentication Check
   const correctPassword = process.env.APP_PASSWORD
+  const hasServerPassword = !!correctPassword
 
-  // Skip auth checks for /api/auth and generic /api/ test routes if any
-  if (pathname !== "/api/auth" && correctPassword) {
+  // Skip auth checks for /api/auth endpoint itself
+  if (pathname === "/api/auth") {
+    return NextResponse.next()
+  }
+
+  // For routes that use server-side API keys, require authentication
+  // Only /api/translate, /api/models, and /api/keys require auth when using server keys
+  if (hasServerPassword) {
     if (pathname.startsWith('/api/translate') || pathname.startsWith('/api/models') || pathname.startsWith('/api/keys')) {
       const sessionCookie = request.cookies.get("ai_translate_session")?.value
+      const clientProvidedKey = request.nextUrl.searchParams.get("key") || undefined
 
-      if (sessionCookie !== correctPassword) {
+      // If client provided their own API key, no auth needed (they're using their own key)
+      const hasClientKey = !!clientProvidedKey && clientProvidedKey.trim().length > 0
+      
+      // If no client key AND user not authenticated, block access to server-side keys
+      if (!hasClientKey && sessionCookie !== correctPassword) {
         return new NextResponse(
-          JSON.stringify({ success: false, error: "You don't have API, please fill it in settings." }),
+          JSON.stringify({ 
+            success: false, 
+            error: "Authentication required. Please login with password or provide your own API key in Settings.",
+            requiresAuth: true
+          }),
           { status: 401, headers: { 'Content-Type': 'application/json' } }
         )
       }

@@ -15,6 +15,20 @@ const ApiKeysSchema = z.object({
 type ApiKeysInput = z.infer<typeof ApiKeysSchema>
 
 /**
+ * Check if user is authenticated via session cookie
+ */
+function isAuthenticated(request: NextRequest): boolean {
+  const sessionCookie = request.cookies.get("ai_translate_session")?.value
+  const correctPassword = process.env.APP_PASSWORD
+  
+  // If no password is set on server, no authentication needed
+  if (!correctPassword) return true
+  
+  // Check if session cookie matches the password
+  return sessionCookie === correctPassword
+}
+
+/**
  * Server-Side API Keys Management
  * 
  * This endpoint allows administrators to set API keys that will be stored
@@ -26,19 +40,31 @@ type ApiKeysInput = z.infer<typeof ApiKeysSchema>
 
 export async function GET(req: NextRequest) {
   try {
+    // Check authentication for server-side keys
+    const isAuthed = isAuthenticated(req)
+    
     // Only return which providers have server-side keys configured (not the actual keys)
-    const configuredProviders = {
+    // If not authenticated, don't reveal server-side key availability
+    const configuredProviders = isAuthed ? {
       gemini: !!process.env.GEMINI_API_KEY,
       groq: !!process.env.GROQ_API_KEY,
       nvidia: !!process.env.NVIDIA_API_KEY,
       openrouter: !!process.env.OPENROUTER_API_KEY,
       custom: !!process.env.CUSTOM_API_KEY,
       customEndpoint: !!process.env.CUSTOM_API_ENDPOINT,
+    } : {
+      gemini: false,
+      groq: false,
+      nvidia: false,
+      openrouter: false,
+      custom: false,
+      customEndpoint: false,
     }
 
     return NextResponse.json({
       success: true,
       data: configuredProviders,
+      authenticated: isAuthed,
     })
   } catch (error) {
     logError("Error fetching key status:", { error })
