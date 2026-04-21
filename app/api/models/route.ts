@@ -40,6 +40,7 @@ interface GeminiModelsResponse {
     description: string
     inputTokenLimit: number
     outputTokenLimit: number
+    supportedGenerationMethods: string[]
   }[]
 }
 
