@@ -34,7 +34,6 @@ export interface HistoryItem {
 }
 
 export interface TranslationHistory {
-  date: string
   items: HistoryItem[]
 }
 

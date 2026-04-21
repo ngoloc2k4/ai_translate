@@ -82,17 +82,41 @@ export function useTranslation() {
 
       // Try to parse JSON response and extract result field (only if not already correct)
       try {
-        const trimmedText = finalText.trim()
-        if (trimmedText.startsWith('{') || (trimmedText.startsWith('```json') && trimmedText.includes('{'))) {
-          const jsonText = trimmedText.replace(/^```json\s*|\s*```$/g, '').trim()
-          const parsed = JSON.parse(jsonText) as TranslationOutput
-          if (parsed.result) {
-            finalText = parsed.result
-            setResult(parsed.result)
+        let parsed: TranslationOutput | null = null
+        
+        // Strategy 1: Try to parse directly or after stripping markdown
+        try {
+          const cleanText = finalText.replace(/```(?:json)?\s*([\s\S]*?)\s*```/g, '$1').trim()
+          parsed = JSON.parse(cleanText) as TranslationOutput
+        } catch (e) {
+          // Strategy 2: Robust fallback - find the last valid JSON object in the string
+          // This handles cases where the model prints thought processes followed by the actual JSON
+          const endIdx = finalText.lastIndexOf('}')
+          if (endIdx !== -1) {
+            for (let i = endIdx - 1; i >= 0; i--) {
+              if (finalText[i] === '{') {
+                try {
+                  const possibleJson = finalText.substring(i, endIdx + 1)
+                  const testParse = JSON.parse(possibleJson) as TranslationOutput
+                  // Make sure it has the shape of our expected output
+                  if (testParse && (testParse.result !== undefined || testParse.original !== undefined)) {
+                    parsed = testParse
+                    break
+                  }
+                } catch (err) {
+                  // Ignore parse errors, keep searching backwards
+                }
+              }
+            }
           }
         }
+
+        if (parsed && parsed.result) {
+          finalText = parsed.result
+          setResult(parsed.result)
+        }
       } catch (e) {
-        // Not JSON, that's fine for simple translations
+        // Fallback to raw text if JSON extraction completely fails
       }
 
       logInfo("Translation Completed", { length: finalText.length })

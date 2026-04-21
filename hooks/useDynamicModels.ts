@@ -8,24 +8,11 @@ export function useDynamicModels(provider: string, clientKey: string, hasServerK
 
   useEffect(() => {
     let isMounted = true
-    const cacheKey = `ai_models_cache_${provider}`
 
     async function fetchModels() {
       if (!provider) return
 
-      // Attempt to load from cache (only if we have a valid key source)
-      try {
-        const cached = sessionStorage.getItem(cacheKey)
-        if (cached) {
-          const parsed = JSON.parse(cached)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setModels(parsed)
-            return // Skip network request if cache is valid
-          }
-        }
-      } catch (err) {
-        // Ignore cache parse errors
-      }
+      setError(null)
 
       // If no client key and no server key, skip fetching
       if (!clientKey && !hasServerKey) {
@@ -33,21 +20,18 @@ export function useDynamicModels(provider: string, clientKey: string, hasServerK
       }
 
       setIsFetching(true)
-      setError(null)
 
       try {
-        // Priority: Use client key if provided, otherwise empty string (server will check auth for server-side key)
-        const url = clientKey 
+        const url = clientKey
           ? `/api/models?provider=${provider}&key=${encodeURIComponent(clientKey)}`
           : `/api/models?provider=${provider}`
-        
+
         const res = await fetch(url)
         const json = await res.json()
-        
+
         if (res.ok && isMounted) {
           if (json.data && Array.isArray(json.data) && json.data.length > 0) {
             setModels(json.data)
-            sessionStorage.setItem(cacheKey, JSON.stringify(json.data))
           }
         } else if (res.status === 401 && isMounted) {
           setError(json.error || `Invalid ${provider.toUpperCase()} API Key`)

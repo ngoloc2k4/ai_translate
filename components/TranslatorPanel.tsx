@@ -6,7 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useToast } from "@/components/ui/Toast"
 import { LANGUAGES } from "@/lib/constants/languages"
-import { MAX_CHARACTERS, MODELS } from "@/lib/constants/providers"
+import { MAX_CHARACTERS } from "@/lib/constants/providers"
 import { useAppSettings } from "@/store/useAppSettings"
 import type { ApiKeys } from "@/types"
 import { shouldShowToast } from "@/lib/utils/throttledToast"
@@ -215,13 +215,9 @@ export default function TranslatorPanel() {
         <ControlBar
           provider={provider}
           setProvider={(newProvider) => {
-            setProvider(newProvider)
             if (newProvider !== provider) {
-              const availableModels = MODELS[newProvider as keyof typeof MODELS]
-              if (availableModels && availableModels.length > 0) {
-                const firstModel = availableModels[0]
-                setModel(typeof firstModel === "string" ? firstModel : firstModel.id)
-              }
+              setProvider(newProvider)
+              setModel("")
             }
           }}
           model={model}

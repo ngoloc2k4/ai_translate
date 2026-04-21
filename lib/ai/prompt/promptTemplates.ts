@@ -10,9 +10,11 @@ Rules:
 7. Preserve formatting such as line breaks, bullet lists, and numbering.
 
 CRITICAL: You MUST output your response as valid JSON only.
+- START YOUR ENTIRE RESPONSE IMMEDIATELY WITH THE '{' CHARACTER.
+- Do NOT include any preamble, introduction, or conversational filler (like "Here is the translation:").
 - No markdown code blocks (no \`\`\`json)
 - No explanations outside the JSON structure
 - Escape all quotes and special characters properly
-- Ensure the JSON is parseable
+- Ensure the output strictly parses via JSON.parse()
 
 Always follow the instruction format strictly.`

@@ -40,8 +40,40 @@ interface GeminiModelsResponse {
     description: string
     inputTokenLimit: number
     outputTokenLimit: number
-    supportedGenerationMethods: string[]
   }[]
+}
+
+/**
+ * Format a model ID into a readable name
+ * e.g., "llama-3.1-8b-instant" -> "Llama 3.1 8B Instant"
+ */
+function formatModelName(id: string): string {
+  const parts = id.split('/');
+  let name = parts[parts.length - 1];
+
+  return name.split(/[-_]/).map(word => {
+    const w = word.toLowerCase();
+    if (w === 'llama') return 'Llama';
+    if (w === 'gpt') return 'GPT';
+    if (w === 'mixtral') return 'Mixtral';
+    if (w === 'nemotron') return 'Nemotron';
+    if (w === 'instruct') return 'Instruct';
+    if (w === 'versatile') return 'Versatile';
+    if (w === 'instant') return 'Instant';
+    if (w === 'vision') return 'Vision';
+    if (w === 'preview') return 'Preview';
+    if (w === 'pro') return 'Pro';
+    if (w === 'flash') return 'Flash';
+    
+    // e.g. 8b, 70b, 405b
+    if (/^\d+(\.\d+)?b$/.test(w)) return w.toUpperCase();
+    
+    // e.g. 8x7b
+    if (/^\d+x\d+b$/.test(w)) return w.replace('x', 'x').replace('b', 'B');
+
+    // Capitalize first letter
+    return word.charAt(0).toUpperCase() + word.slice(1);
+  }).join(' ');
 }
 
 export async function GET(req: NextRequest) {
@@ -108,7 +140,9 @@ export async function GET(req: NextRequest) {
         }
         if (!res.ok) throw new Error(`Groq API returned ${res.status}`)
         const json = (await res.json()) as OpenAiModelsResponse
-        models = json.data.map(m => ({ id: m.id, name: m.id }))
+        models = json.data
+          .filter(m => !["mixtral-8x7b-32768", "llama2-70b-4096", "gemma-7b-it"].includes(m.id))
+          .map(m => ({ id: m.id, name: formatModelName(m.id) }))
         break
       }
       case "nvidia": {
@@ -120,7 +154,7 @@ export async function GET(req: NextRequest) {
         }
         if (!res.ok) throw new Error(`NVIDIA API returned ${res.status}`)
         const json = (await res.json()) as OpenAiModelsResponse
-        models = json.data.map(m => ({ id: m.id, name: m.id }))
+        models = json.data.map(m => ({ id: m.id, name: formatModelName(m.id) }))
         break
       }
       case "openrouter": {
@@ -132,7 +166,7 @@ export async function GET(req: NextRequest) {
         }
         if (!res.ok) throw new Error(`OpenRouter API returned ${res.status}`)
         const json = (await res.json()) as OpenAiModelsResponse
-        models = json.data.map(m => ({ id: m.id, name: m.name || m.id }))
+        models = json.data.map(m => ({ id: m.id, name: m.name || formatModelName(m.id) }))
         break
       }
     }

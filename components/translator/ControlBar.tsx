@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { PROVIDERS, MODELS } from "@/lib/constants/providers"
+import { PROVIDERS } from "@/lib/constants/providers"
 import type { ApiKeys } from "@/types"
 import SearchableSelect, { SearchableSelectOption } from "@/components/ui/SearchableSelect"
 import { useDynamicModels } from "@/hooks/useDynamicModels"
@@ -47,10 +47,17 @@ export default function ControlBar({
   const { allModels } = useProviderConfig(provider, fetchedModels)
 
   useEffect(() => {
-    if (error && shouldShowToast('control_bar_error')) {
+    if (error && shouldShowToast('control_bar_error', 5000)) {
       showToast(error, "error")
     }
   }, [error, showToast])
+
+  // Auto-select first model when available models change or current model gets reset
+  useEffect(() => {
+    if (allModels.length > 0 && (!model || !allModels.some(m => m.id === model))) {
+      setModel(allModels[0].id)
+    }
+  }, [allModels, model, setModel])
 
   return (
     <section className="flex flex-wrap items-center justify-between gap-4 p-4 border-b border-[var(--border)] bg-[var(--background)]">
