@@ -70,6 +70,8 @@ export const translations = {
 
     // History
     todaysHistory: "Lịch sử hôm nay",
+    today: "Hôm nay",
+    yesterday: "Hôm qua",
     clearAll: "Xóa tất cả",
 
     // Mobile nav
@@ -193,6 +195,8 @@ export const translations = {
 
     // History
     todaysHistory: "Today's History",
+    today: "Today",
+    yesterday: "Yesterday",
     clearAll: "Clear All",
 
     // Mobile nav
@@ -316,6 +320,8 @@ export const translations = {
 
     // History
     todaysHistory: "오늘의 기록",
+    today: "오늘",
+    yesterday: "어제",
     clearAll: "모두 지우기",
 
     // Mobile nav
