@@ -11,6 +11,7 @@ import type { ApiKeys, HistoryItem } from "@/types"
 import { useToast } from "@/components/ui/Toast"
 import MobileNav from "@/components/translator/MobileNav"
 import Footer from "@/components/translator/Footer"
+import { useAppSettings } from "@/store/useAppSettings"
 
 export default function HistoryPage() {
   const { t } = useI18n()
@@ -19,6 +20,7 @@ export default function HistoryPage() {
   const [apiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
   const { items: historyItems, clear: clearHistory, deleteItem } = useHistory()
   const { translate, loading, result } = useTranslation()
+  const { serverKeys } = useAppSettings()
   
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null)
   const [editedText, setEditedText] = useState("")
@@ -71,13 +73,18 @@ export default function HistoryPage() {
     if (!selectedItem || !editedText.trim()) return
 
     const provider = selectedItem.provider as keyof ApiKeys
-    const apiKey = apiKeys[provider] as string
+    const clientKey = apiKeys[provider] as string
+    const hasServerKey = !!serverKeys[provider]
 
-    if (!apiKey) {
+    // If neither client key nor server key is available, prompt user
+    if (!clientKey && !hasServerKey) {
       const providerName = provider.charAt(0).toUpperCase() + provider.slice(1)
       showToast(`Please configure your ${providerName} API key in Settings first.`, "error")
       return
     }
+
+    // Use client key if available, otherwise pass empty string (server-side key will be used)
+    const apiKey = clientKey || ""
 
     translate({
       text: editedText,
