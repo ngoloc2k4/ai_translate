@@ -57,7 +57,8 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
       const hasClientKey = !!clientProvidedKey && clientProvidedKey.trim().length > 0
 
       // If no client key AND session token is invalid, reject request
-      if (!hasClientKey && !verifySessionToken(sessionCookie)) {
+      const isSessionValid = await verifySessionToken(sessionCookie)
+      if (!hasClientKey && !isSessionValid) {
         return new NextResponse(
           JSON.stringify({
             success: false,

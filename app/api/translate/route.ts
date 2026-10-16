@@ -10,7 +10,7 @@ import { verifySessionToken } from "@/lib/utils/authSession"
 /**
  * Check if user is authenticated via session cookie
  */
-function isAuthenticated(request: NextRequest): boolean {
+async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const sessionCookie = request.cookies.get("ai_translate_session")?.value
   const correctPassword = process.env.APP_PASSWORD
   
@@ -18,7 +18,7 @@ function isAuthenticated(request: NextRequest): boolean {
   if (!correctPassword) return true
   
   // Check if session token is valid and signed
-  return verifySessionToken(sessionCookie)
+  return await verifySessionToken(sessionCookie)
 }
 
 export async function POST(req: NextRequest) {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
     
     // If no client key, check if user is authenticated to use server-side keys
     if (!hasClientKey) {
-      const isAuthed = isAuthenticated(req)
+      const isAuthed = await isAuthenticated(req)
       if (!isAuthed) {
         logAuth('failure', { provider, reason: 'no_auth_for_server_key' })
         return NextResponse.json({ 

@@ -6,7 +6,7 @@ import { verifySessionToken } from "@/lib/utils/authSession"
 /**
  * Check if user is authenticated via session cookie
  */
-function isAuthenticated(request: NextRequest): boolean {
+async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const sessionCookie = request.cookies.get("ai_translate_session")?.value
   const correctPassword = process.env.APP_PASSWORD
   
@@ -14,7 +14,7 @@ function isAuthenticated(request: NextRequest): boolean {
   if (!correctPassword) return true
   
   // Check if session token is valid and signed
-  return verifySessionToken(sessionCookie)
+  return await verifySessionToken(sessionCookie)
 }
 
 /**
@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
     
     // If no client key, check if user is authenticated to use server-side keys
     if (!hasClientKey) {
-      const isAuthed = isAuthenticated(req)
+      const isAuthed = await isAuthenticated(req)
       if (!isAuthed) {
         // User is not authenticated and didn't provide their own key
         // Return empty data - frontend will fallback to static lists

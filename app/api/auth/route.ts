@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     if (verifyPasswordConstantTime(password, correctPassword)) {
-      const token = createSessionToken()
+      const token = await createSessionToken()
 
       const response = NextResponse.json({ success: true })
       

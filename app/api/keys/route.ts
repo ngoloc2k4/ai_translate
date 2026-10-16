@@ -18,7 +18,7 @@ type ApiKeysInput = z.infer<typeof ApiKeysSchema>
 /**
  * Check if user is authenticated via session cookie
  */
-function isAuthenticated(request: NextRequest): boolean {
+async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const sessionCookie = request.cookies.get("ai_translate_session")?.value
   const correctPassword = process.env.APP_PASSWORD
   
@@ -26,7 +26,7 @@ function isAuthenticated(request: NextRequest): boolean {
   if (!correctPassword) return true
   
   // Check if session token is valid and signed
-  return verifySessionToken(sessionCookie)
+  return await verifySessionToken(sessionCookie)
 }
 
 /**
@@ -42,7 +42,7 @@ function isAuthenticated(request: NextRequest): boolean {
 export async function GET(req: NextRequest) {
   try {
     // Check authentication for server-side keys
-    const isAuthed = isAuthenticated(req)
+    const isAuthed = await isAuthenticated(req)
     
     // Only return which providers have server-side keys configured (not the actual keys)
     // If not authenticated, don't reveal server-side key availability
