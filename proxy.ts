@@ -15,9 +15,11 @@ const ratelimit = hasUpstashConfig
   : null
 
 /**
- * Next.js Middleware for Security, Authentication Gate & Rate Limiting
+ * Next.js 16 Proxy Convention (`proxy.ts`)
+ * 
+ * In Next.js 16+, middleware is officially renamed to proxy (`export function proxy`).
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const url = new URL(request.url)
   const { pathname } = url
 
@@ -33,6 +35,9 @@ export async function middleware(request: NextRequest) {
 
   return response
 }
+
+// Fallback compatibility alias for middleware
+export const middleware = proxy
 
 async function handleApiRoute(request: NextRequest, pathname: string) {
   const correctPassword = process.env.APP_PASSWORD
@@ -91,7 +96,7 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
         })
       }
     } catch (err) {
-      console.error("[Middleware] Upstash Rate Limiter Error:", err)
+      console.error("[Proxy] Upstash Rate Limiter Error:", err)
     }
   }
 
