@@ -1,4 +1,3 @@
-```
 # Dependencies
 node_modules/
 
@@ -7,6 +6,8 @@ node_modules/
 dist/
 build/
 out/
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Environment variables
 .env
@@ -47,9 +48,8 @@ htmlcov/
 .coverage*
 .nox/
 *.cover
-*.log
-.DS_Store
+
+# GitNexus & Claude
 .gitnexus
 .claude
 docs/
-```

@@ -36,8 +36,8 @@ export async function proxy(request: NextRequest) {
   return response
 }
 
-// Fallback compatibility alias for middleware
-export const middleware = proxy
+export default proxy
+
 
 async function handleApiRoute(request: NextRequest, pathname: string) {
   const correctPassword = process.env.APP_PASSWORD

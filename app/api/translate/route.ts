@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     const transformedStream = new ReadableStream({
       async start(controller) {
         const streamParser = createParser({
-          onEvent: (event) => {
+          onEvent: (event: any) => {
             const data = event.data
             if (data === "[DONE]") {
               controller.close()
