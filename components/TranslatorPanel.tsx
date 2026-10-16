@@ -125,8 +125,8 @@ export default function TranslatorPanel() {
             return
           }
 
-          const apiKey = apiKeysRef.current[providerRef.current as keyof ApiKeys] as string
-          const hasServerKey = serverKeysRef.current[providerRef.current]
+          const apiKey = (apiKeysRef.current as any)?.[providerRef.current] as string || ""
+          const hasServerKey = !!(serverKeysRef.current && serverKeysRef.current[providerRef.current])
           if (!apiKey && !hasServerKey) {
             setError(t("invalidApiKey"))
             setShowSettings(true)
@@ -165,8 +165,8 @@ export default function TranslatorPanel() {
       return
     }
 
-    const apiKey = apiKeys[provider as keyof ApiKeys] as string
-    const hasServerKey = serverKeys[provider]
+    const apiKey = (apiKeys as any)?.[provider] as string || ""
+    const hasServerKey = !!(serverKeys && serverKeys[provider])
     if (!apiKey && !hasServerKey) {
       setError(t("invalidApiKey"))
       setShowSettings(true)

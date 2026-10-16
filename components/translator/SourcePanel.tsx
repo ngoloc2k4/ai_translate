@@ -1,5 +1,7 @@
 "use client"
 
+import { useState } from "react"
+
 interface SourcePanelProps {
   sourceText: string
   setSourceText: (text: string) => void

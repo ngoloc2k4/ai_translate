@@ -73,12 +73,12 @@ export default function HistoryPage() {
     if (!selectedItem || !editedText.trim()) return
 
     const provider = selectedItem.provider as keyof ApiKeys
-    const clientKey = apiKeys[provider] as string
-    const hasServerKey = !!serverKeys[provider]
+    const clientKey = (apiKeys as any)?.[provider] as string || ""
+    const hasServerKey = !!(serverKeys && serverKeys[provider])
 
     // If neither client key nor server key is available, prompt user
     if (!clientKey && !hasServerKey) {
-      const providerName = provider.charAt(0).toUpperCase() + provider.slice(1)
+      const providerName = String(provider).charAt(0).toUpperCase() + String(provider).slice(1)
       showToast(`Please configure your ${providerName} API key in Settings first.`, "error")
       return
     }
@@ -93,7 +93,7 @@ export default function HistoryPage() {
       provider: selectedItem.provider as any,
       model: selectedItem.model || "gemini-2.0-flash",
       apiKey,
-      baseUrl: selectedItem.provider === "custom" ? apiKeys.customEndpoint : undefined,
+      baseUrl: selectedItem.provider === "custom" ? apiKeys?.customEndpoint : undefined,
       options: {
         mode: selectedItem.mode || "default",
         tone: selectedItem.tone || "default",

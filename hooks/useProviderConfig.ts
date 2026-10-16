@@ -1,5 +1,5 @@
 import { useMemo } from "react"
-import { PROVIDERS } from "@/lib/constants/providers"
+import { PROVIDERS, DEFAULT_MODELS } from "@/lib/constants/providers"
 import { useAppSettings } from "@/store/useAppSettings"
 import { SearchableSelectOption } from "@/components/ui/SearchableSelect"
 
@@ -8,11 +8,17 @@ export function useProviderConfig(providerId: string, fetchedModels: SearchableS
 
   return useMemo(() => {
     const currentProvider = PROVIDERS.find((p) => p.id === providerId)
-    const customModels = (apiKeys.customModels as any)?.[providerId] || []
+    const customModels = (apiKeys?.customModels as any)?.[providerId] || []
+    const safeCustomModels = Array.isArray(customModels) ? customModels : []
+
+    // If fetchedModels is empty, use DEFAULT_MODELS for this provider
+    const baseModels = fetchedModels && fetchedModels.length > 0 
+      ? fetchedModels 
+      : (DEFAULT_MODELS[providerId] || [])
 
     const rawModels = [
-      ...fetchedModels,
-      ...customModels.map((m: string) => ({ id: m, name: m }))
+      ...baseModels,
+      ...safeCustomModels.map((m: string) => ({ id: m, name: m }))
     ]
     
     // Deduplicate models mapping by ID
@@ -22,5 +28,5 @@ export function useProviderConfig(providerId: string, fetchedModels: SearchableS
       currentProvider,
       allModels
     }
-  }, [providerId, fetchedModels, apiKeys.customModels])
+  }, [providerId, fetchedModels, apiKeys?.customModels])
 }

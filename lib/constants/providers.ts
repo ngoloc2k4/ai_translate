@@ -6,6 +6,32 @@ export const PROVIDERS = [
   { id: "custom", name: "Custom Provider" },
 ] as const
 
+export const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
+  gemini: [
+    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
+    { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
+  ],
+  groq: [
+    { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B" },
+    { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B" },
+    { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B" },
+  ],
+  nvidia: [
+    { id: "meta/llama-3.1-70b-instruct", name: "Llama 3.1 70B" },
+    { id: "meta/llama-3.1-405b-instruct", name: "Llama 3.1 405B" },
+    { id: "nvidia/nemotron-4-340b-instruct", name: "Nemotron 4 340B" },
+  ],
+  openrouter: [
+    { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+    { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet" },
+    { id: "openai/gpt-4o", name: "GPT-4o" },
+  ],
+  custom: [
+    { id: "custom-model", name: "Custom Model" },
+  ],
+}
+
 
 export const TONES = [
   { id: "default", name: "Default" },

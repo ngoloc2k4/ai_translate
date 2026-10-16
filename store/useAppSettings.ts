@@ -26,9 +26,9 @@ export const useAppSettings = create<AppSettingsState>()(
       hasHydrated: false,
       
       setApiKeys: (keysOrUpdater) => set((state) => ({
-        apiKeys: typeof keysOrUpdater === 'function' ? keysOrUpdater(state.apiKeys) : keysOrUpdater
+        apiKeys: typeof keysOrUpdater === 'function' ? keysOrUpdater(state.apiKeys || {}) : (keysOrUpdater || {})
       })),
-      setServerKeys: (serverKeys) => set({ serverKeys }),
+      setServerKeys: (serverKeys) => set({ serverKeys: serverKeys || {} }),
       setFontSize: (fontSize) => set({ fontSize }),
       setMobileFontSize: (mobileFontSize) => set({ mobileFontSize }),
       setHasHydrated: (hasHydrated) => set({ hasHydrated }),
@@ -36,9 +36,15 @@ export const useAppSettings = create<AppSettingsState>()(
     {
       name: 'ai_translate_settings',
       partialize: (state) => ({ 
-        apiKeys: state.apiKeys, 
-        fontSize: state.fontSize,
-        mobileFontSize: state.mobileFontSize
+        apiKeys: state.apiKeys || {}, 
+        fontSize: state.fontSize || 14,
+        mobileFontSize: state.mobileFontSize || 16
+      }),
+      merge: (persistedState: any, currentState) => ({
+        ...currentState,
+        ...(persistedState || {}),
+        apiKeys: persistedState?.apiKeys || {},
+        serverKeys: currentState.serverKeys || {},
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {

@@ -44,8 +44,8 @@ export default function ControlBar({
   
   // Priority: Settings API key > Server-side key
   // If user has set a key in Settings, use that; otherwise fall back to server key
-  const clientKey = (apiKeys as any)[provider] || ""
-  const hasServerKey = !!serverKeys[provider]
+  const clientKey = (apiKeys as any)?.[provider] || ""
+  const hasServerKey = !!(serverKeys && serverKeys[provider])
   const hasClientKey = !!clientKey
   
   // Pass client key if available, otherwise empty string (server will use server-side key)
