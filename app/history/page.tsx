@@ -159,6 +159,42 @@ export default function HistoryPage() {
                   {getLanguageName(selectedItem.targetLang)}
                 </span>
               </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const textToSpeak = result || selectedItem.translatedText
+                    if (textToSpeak && typeof window !== "undefined" && "speechSynthesis" in window) {
+                      if (window.speechSynthesis.speaking) {
+                        window.speechSynthesis.cancel()
+                      } else {
+                        const utterance = new SpeechSynthesisUtterance(textToSpeak)
+                        window.speechSynthesis.speak(utterance)
+                      }
+                    }
+                  }}
+                  title="Speak"
+                  className="p-1 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={async () => {
+                    const textToCopy = result || selectedItem.translatedText
+                    if (textToCopy) {
+                      await navigator.clipboard.writeText(textToCopy)
+                      showToast(t("copied") || "Copied!", "success")
+                    }
+                  }}
+                  title="Copy"
+                  className="p-1 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                </button>
+              </div>
             </div>
             <div className="flex-1 p-5 overflow-y-auto custom-scrollbar">
               {loading ? (
@@ -227,7 +263,7 @@ export default function HistoryPage() {
               onClick={clearHistory}
               className="px-3 py-1.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-500 hover:bg-red-500/20 font-medium transition-colors"
             >
-              Clear Data
+              {t("clear") || "Clear"}
             </button>
           )}
         </div>
@@ -297,17 +333,33 @@ export default function HistoryPage() {
                       {item.provider}
                     </span>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      deleteItem(item.id)
-                    }}
-                    className="p-1.5 rounded-[10px] hover:bg-red-500/20 text-zinc-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation()
+                        await navigator.clipboard.writeText(item.translatedText)
+                        showToast(t("copied") || "Copied!", "success")
+                      }}
+                      title="Copy translation"
+                      className="p-1.5 rounded-[10px] hover:bg-[var(--background)] text-zinc-400 hover:text-white transition"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteItem(item.id)
+                      }}
+                      title="Delete entry"
+                      className="p-1.5 rounded-[10px] hover:bg-red-500/20 text-zinc-400 hover:text-red-500 transition"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
                 <p className="text-zinc-300 text-sm line-clamp-2 mb-1">{item.sourceText}</p>
                 <p className="text-[var(--primary)] text-sm line-clamp-2">{item.translatedText}</p>
