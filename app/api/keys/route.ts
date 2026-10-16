@@ -1,19 +1,32 @@
 import { NextRequest, NextResponse } from "next/server"
-import { z } from "zod"
 import { logError, logInfo, logSecurity } from "@/lib/utils/logger"
 import { verifySessionToken } from "@/lib/utils/authSession"
 
-// Schema validation for API keys
-const ApiKeysSchema = z.object({
-  gemini: z.string().optional(),
-  groq: z.string().optional(),
-  nvidia: z.string().optional(),
-  openrouter: z.string().optional(),
-  custom: z.string().optional(),
-  customEndpoint: z.string().url().optional().or(z.literal('')),
-})
+interface ApiKeysInput {
+  gemini?: string
+  groq?: string
+  nvidia?: string
+  openrouter?: string
+  custom?: string
+  customEndpoint?: string
+}
 
-type ApiKeysInput = z.infer<typeof ApiKeysSchema>
+function validateApiKeysInput(body: any): { success: boolean; data?: ApiKeysInput; error?: string } {
+  if (!body || typeof body !== "object") {
+    return { success: false, error: "Invalid body" }
+  }
+  return {
+    success: true,
+    data: {
+      gemini: typeof body.gemini === "string" ? body.gemini : undefined,
+      groq: typeof body.groq === "string" ? body.groq : undefined,
+      nvidia: typeof body.nvidia === "string" ? body.nvidia : undefined,
+      openrouter: typeof body.openrouter === "string" ? body.openrouter : undefined,
+      custom: typeof body.custom === "string" ? body.custom : undefined,
+      customEndpoint: typeof body.customEndpoint === "string" ? body.customEndpoint : undefined,
+    }
+  }
+}
 
 /**
  * Check if user is authenticated via session cookie
@@ -81,10 +94,10 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
 
     // Validate input
-    const result = ApiKeysSchema.safeParse(body)
-    if (!result.success) {
+    const result = validateApiKeysInput(body)
+    if (!result.success || !result.data) {
       return NextResponse.json(
-        { error: "Invalid input", details: result.error.issues },
+        { error: result.error || "Invalid input" },
         { status: 400 }
       )
     }
