@@ -1,106 +1,46 @@
-import { JSON_OUTPUT_INSTRUCTION } from "./jsonOutputSchema"
-
 export const modePrompts: Record<string, string> = {
-  default: `Process the text naturally.
+  default: `Process the text naturally and accurately in the target language. Return ONLY the processed text directly.`,
 
-${JSON_OUTPUT_INSTRUCTION}`,
+  translate: `Translate the input text into the target language with high precision. Return ONLY the translated text directly without commentary.`,
 
   bilingual: `Process the text in bilingual format.
-For each sentence, output the original sentence followed by its translation.
-Separate each sentence pair with a blank line.
+For each sentence, output the original sentence followed immediately by its translation on the next line.
+Separate each sentence pair with a single blank line.
 
 Example format:
 Original sentence 1
 Translated sentence 1
 
 Original sentence 2
-Translated sentence 2
-
-${JSON_OUTPUT_INSTRUCTION}
-
-For bilingual mode, your JSON MUST include:
-{
-  "result": "full bilingual text with line breaks",
-  "bilingual": [
-    {"original": "sentence 1", "translation": "translation 1", "index": 1}
-  ]
-}`,
+Translated sentence 2`,
 
   "bilingual-paragraph": `Process the text in bilingual paragraph format.
-Output the complete original paragraph first, then output the complete translated paragraph.
-Separate the two paragraphs with a blank line.
+Output the complete original paragraph first, followed by a blank line, then output the complete translated paragraph.
 
 Example format:
-Original paragraph (all sentences together)
+Original paragraph text...
 
-Translated paragraph (all sentences together)
+Translated paragraph text...`,
 
-${JSON_OUTPUT_INSTRUCTION}
+  correcting: `Review and correct any errors in the source text (grammar, spelling, syntax, punctuation).
+Provide the fully corrected text first, followed by a brief bulleted list of fixes made.`,
 
-For bilingual-paragraph mode, your JSON MUST include:
-{
-  "result": "full bilingual text",
-  "bilingual": [
-    {"original": "full original paragraph", "translation": "full translated paragraph"}
-  ]
-}`,
+  mixing: `Mix and blend the source and target languages naturally in a modern, casual code-switching style. Output the mixed text directly.`,
 
-  correcting: `Review and correct any errors in the text.
-Fix grammar, spelling, and punctuation mistakes.
+  rewriting: `Rewrite the text to improve clarity, flow, vocabulary, and readability while preserving the exact original message. Output the rewritten text directly.`,
 
-${JSON_OUTPUT_INSTRUCTION}
+  strictness: `Process the text with strict, literal fidelity to accuracy and terminology. Prioritize precision and formal correctness over creative flair.`,
 
-For correcting mode, your JSON MUST include:
-{
-  "result": "corrected text",
-  "corrections": [
-    {"original": "mistake", "corrected": "fix", "type": "grammar|spelling|punctuation", "reason": "why"}
-  ]
-}`,
+  summarize: `Provide a concise, high-value summary of the key points in the target language. Keep it structured and easy to scan.`,
 
-  mixing: `Mix and blend the source and target languages naturally.
-Create a code-switched output that flows well.
+  paraphrase: `Paraphrase and rephrase the text in the same language. Improve clarity and expression while maintaining the core meaning.`,
 
-${JSON_OUTPUT_INSTRUCTION}`,
+  explain: `Translate the text first, then provide a concise linguistic breakdown explaining key vocabulary, cultural nuances, or grammar patterns used.
 
-  rewriting: `Rewrite the text to improve clarity, flow, and readability.
-Maintain the original meaning but enhance the expression.
+Format:
+### Translation
+<translated text>
 
-${JSON_OUTPUT_INSTRUCTION}`,
-
-  strictness: `Process the text with strict adherence to accuracy.
-Prioritize precision over creativity.
-
-${JSON_OUTPUT_INSTRUCTION}`,
-
-  summarize: `Provide a concise summary of the key points.
-Capture the essential information in fewer words.
-
-${JSON_OUTPUT_INSTRUCTION}
-
-For summarizing mode, your JSON MUST include:
-{
-  "result": "summary text",
-  "summary": "brief summary"
-}`,
-
-  translate: `Translate the following text to the target language.
-Preserve the meaning as accurately as possible.
-
-${JSON_OUTPUT_INSTRUCTION}`,
-
-  paraphrase: `Rewrite the text in the same language.
-Improve clarity and readability while keeping the original meaning.
-
-${JSON_OUTPUT_INSTRUCTION}`,
-
-  explain: `Translate the text and then explain the important grammar or vocabulary.
-
-${JSON_OUTPUT_INSTRUCTION}
-
-For explain mode, your JSON MUST include:
-{
-  "result": "translation with explanation",
-  "explanation": "detailed explanation of grammar/vocabulary"
-}`,
+### Linguistic Explanation
+<notes and vocabulary>`,
 }

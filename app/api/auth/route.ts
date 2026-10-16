@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { verifyPasswordConstantTime, createSessionToken } from "@/lib/utils/authSession"
 
 export async function POST(request: Request) {
   try {
@@ -13,10 +14,8 @@ export async function POST(request: Request) {
       )
     }
 
-    if (password === correctPassword) {
-      // Create a simplified generic token since this is for personal use over HTTPS
-      // The token is just the password itself, acting as a bearer secret
-      const token = correctPassword
+    if (verifyPasswordConstantTime(password, correctPassword)) {
+      const token = createSessionToken()
 
       const response = NextResponse.json({ success: true })
       

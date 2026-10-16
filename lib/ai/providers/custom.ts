@@ -1,4 +1,5 @@
 import { logAuth } from "@/lib/utils/logger"
+import { isSafeExternalUrl } from "@/lib/utils/ssrfGuard"
 import type { ProviderParams } from "@/types"
 
 const PROVIDER_TIMEOUT_MS = 30_000
@@ -13,6 +14,11 @@ export async function translateCustom({
 }: ProviderParams): Promise<ReadableStream> {
   if (!baseUrl) {
     throw new Error("Custom provider requires a base URL")
+  }
+
+  const urlCheck = isSafeExternalUrl(baseUrl)
+  if (!urlCheck.safe) {
+    throw new Error(`Invalid custom endpoint URL: ${urlCheck.error}`)
   }
 
   const controller = new AbortController()

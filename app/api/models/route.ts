@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getApiKeyToUse } from "@/lib/utils/validateKey"
 import { logError } from "@/lib/utils/logger"
+import { verifySessionToken } from "@/lib/utils/authSession"
 
 /**
  * Check if user is authenticated via session cookie
@@ -12,8 +13,8 @@ function isAuthenticated(request: NextRequest): boolean {
   // If no password is set on server, no authentication needed
   if (!correctPassword) return true
   
-  // Check if session cookie matches the password
-  return sessionCookie === correctPassword
+  // Check if session token is valid and signed
+  return verifySessionToken(sessionCookie)
 }
 
 /**

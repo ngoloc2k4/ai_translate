@@ -125,15 +125,15 @@ export default function SettingsModal({
           
           <div>
             <label className="block text-xs font-bold text-zinc-500 uppercase mb-1">
-              {t("customProviderName")}
+              {t("customApiKey")}
             </label>
             <input
-              type="text"
+              type="password"
               value={apiKeys.custom || ""}
               onChange={(e) =>
                 setApiKeys({ ...apiKeys, custom: e.target.value })
               }
-              placeholder="My Provider"
+              placeholder="sk-... or your-token"
               className="w-full px-3 py-2 rounded-[10px] border border-[var(--border)] bg-[var(--background)] text-sm text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none"
             />
           </div>
@@ -148,7 +148,7 @@ export default function SettingsModal({
               onChange={(e) =>
                 setApiKeys({ ...apiKeys, customEndpoint: e.target.value })
               }
-              placeholder="https://api.example.com/v1/chat/completions"
+              placeholder="https://api.openai.com/v1/chat/completions"
               className="w-full px-3 py-2 rounded-[10px] border border-[var(--border)] bg-[var(--background)] text-sm text-white focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent outline-none"
             />
           </div>

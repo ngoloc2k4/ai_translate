@@ -27,6 +27,7 @@ export function useTranslation() {
   const [result, setResult] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [latency, setLatency] = useState<string>("0MS")
   const abortControllerRef = useRef<AbortController | null>(null)
 
   const translate = useCallback(async (params: UseTranslationOptions) => {
@@ -40,6 +41,7 @@ export function useTranslation() {
     setLoading(true)
     setError(null)
     setResult("")
+    const startTime = Date.now()
 
     try {
       const response = await fetch("/api/translate", {
@@ -80,46 +82,22 @@ export function useTranslation() {
         setResult(finalText)
       }
 
-      // Try to parse JSON response and extract result field (only if not already correct)
-      try {
-        let parsed: TranslationOutput | null = null
-        
-        // Strategy 1: Try to parse directly or after stripping markdown
+      // In case an older model or custom prompt returned raw JSON, clean it up gracefully
+      if (finalText.trim().startsWith('{') && finalText.trim().endsWith('}')) {
         try {
-          const cleanText = finalText.replace(/```(?:json)?\s*([\s\S]*?)\s*```/g, '$1').trim()
-          parsed = JSON.parse(cleanText) as TranslationOutput
-        } catch (e) {
-          // Strategy 2: Robust fallback - find the last valid JSON object in the string
-          // This handles cases where the model prints thought processes followed by the actual JSON
-          const endIdx = finalText.lastIndexOf('}')
-          if (endIdx !== -1) {
-            for (let i = endIdx - 1; i >= 0; i--) {
-              if (finalText[i] === '{') {
-                try {
-                  const possibleJson = finalText.substring(i, endIdx + 1)
-                  const testParse = JSON.parse(possibleJson) as TranslationOutput
-                  // Make sure it has the shape of our expected output
-                  if (testParse && (testParse.result !== undefined || testParse.original !== undefined)) {
-                    parsed = testParse
-                    break
-                  }
-                } catch (err) {
-                  // Ignore parse errors, keep searching backwards
-                }
-              }
-            }
+          const parsed = JSON.parse(finalText.trim()) as TranslationOutput
+          if (parsed && typeof parsed.result === "string") {
+            finalText = parsed.result
+            setResult(parsed.result)
           }
+        } catch {
+          // If not valid JSON, leave finalText as-is
         }
-
-        if (parsed && parsed.result) {
-          finalText = parsed.result
-          setResult(parsed.result)
-        }
-      } catch (e) {
-        // Fallback to raw text if JSON extraction completely fails
       }
 
-      logInfo("Translation Completed", { length: finalText.length })
+      const elapsed = Date.now() - startTime
+      setLatency(`${elapsed}MS`)
+      logInfo("Translation Completed", { length: finalText.length, elapsedMs: elapsed })
 
       // Save history
       saveHistory({
@@ -162,12 +140,14 @@ export function useTranslation() {
   const reset = useCallback(() => {
     setResult("")
     setError(null)
+    setLatency("0MS")
   }, [])
 
   return {
     result,
     loading,
     error,
+    latency,
     setError,
     translate,
     stop,

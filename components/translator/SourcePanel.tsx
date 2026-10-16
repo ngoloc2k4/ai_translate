@@ -17,18 +17,52 @@ export default function SourcePanel({
   isTranslating,
   t
 }: SourcePanelProps) {
+  const [isSpeaking, setIsSpeaking] = useState(false)
+
+  const handleSpeak = () => {
+    if (!sourceText || typeof window === "undefined" || !("speechSynthesis" in window)) return
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel()
+      setIsSpeaking(false)
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(sourceText)
+    utterance.onend = () => setIsSpeaking(false)
+    utterance.onerror = () => setIsSpeaking(false)
+    setIsSpeaking(true)
+    window.speechSynthesis.speak(utterance)
+  }
+
   return (
     <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[20px] shadow-sm relative group overflow-hidden">
       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--panel)]/50">
         <span className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-widest">{t("source")}</span>
-        <button
-          onClick={() => setSourceText("")}
-          className="text-zinc-600 hover:text-zinc-300 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
+        <div className="flex items-center gap-1.5">
+          {sourceText && (
+            <button
+              onClick={handleSpeak}
+              title={isSpeaking ? "Stop speaking" : "Speak source text"}
+              className={`p-1.5 rounded-md hover:bg-[var(--background)] transition-colors ${
+                isSpeaking ? "text-emerald-400" : "text-zinc-600 hover:text-zinc-300"
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+              </svg>
+            </button>
+          )}
+          <button
+            onClick={() => setSourceText("")}
+            title={t("clear") || "Clear"}
+            className="p-1.5 rounded-md hover:bg-[var(--background)] text-zinc-600 hover:text-zinc-300 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
       </div>
       <div className="flex-1 min-h-0 relative p-4 flex flex-col">
         <textarea

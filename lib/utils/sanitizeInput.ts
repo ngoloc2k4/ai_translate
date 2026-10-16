@@ -43,11 +43,10 @@ export function sanitizeInput(text: string): string {
     return ''
   }
 
+  // Enforce max length while preserving markdown and quotes for programming and technical translations
   return text
     .trim()
     .slice(0, MAX_CHARACTERS)
-    .replace(TRIPLE_DOUBLE_QUOTES, "'\"'")
-    .replace(TRIPLE_BACKTICKS, '` `')
     .replace(SCRIPT_TAGS, '')
     .replace(JAVASCRIPT_PROTOCOL, '')
     .replace(DATA_URI_HTML, '')

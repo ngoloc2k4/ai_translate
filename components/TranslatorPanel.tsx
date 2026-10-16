@@ -23,7 +23,7 @@ import Footer from "./translator/Footer"
 export default function TranslatorPanel() {
   const { t } = useI18n()
   const { showToast } = useToast()
-  const { result, loading, error, setError, translate, reset, stop } = useTranslation()
+  const { result, loading, error, latency, setError, translate, reset, stop } = useTranslation()
 
   const { fontSize, setFontSize, mobileFontSize, setMobileFontSize, apiKeys, setApiKeys, serverKeys, hasHydrated } = useAppSettings()
   const [isMobile, setIsMobile] = useState(false)
@@ -256,6 +256,7 @@ export default function TranslatorPanel() {
             total: sourceText.length + result.length
           }}
           isReady={!loading}
+          latency={latency}
           t={t}
         />
       </div>

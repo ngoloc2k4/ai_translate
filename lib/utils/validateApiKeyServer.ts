@@ -6,6 +6,7 @@
  */
 
 import { logError } from './logger'
+import { isSafeExternalUrl } from './ssrfGuard'
 
 const keyValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
@@ -155,6 +156,12 @@ export async function validateCustomApiKey(key: string, endpoint?: string): Prom
 
   // If endpoint provided, try a simple OPTIONS request
   if (endpoint) {
+    const urlCheck = isSafeExternalUrl(endpoint)
+    if (!urlCheck.safe) {
+      logError('Custom endpoint rejected by SSRF guard', { error: urlCheck.error, endpoint })
+      return false
+    }
+
     try {
       const response = await fetch(endpoint, {
         method: 'OPTIONS',
