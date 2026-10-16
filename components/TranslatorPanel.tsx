@@ -222,6 +222,10 @@ export default function TranslatorPanel() {
           }}
           model={model}
           setModel={setModel}
+          tone={tone}
+          setTone={setTone}
+          mode={mode}
+          setMode={setMode}
           temperature={temperature}
           setTemperature={setTemperature}
           apiKeys={apiKeys}

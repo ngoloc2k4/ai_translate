@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { PROVIDERS } from "@/lib/constants/providers"
+import { PROVIDERS, TONES, MODES } from "@/lib/constants/providers"
 import type { ApiKeys } from "@/types"
 import SearchableSelect, { SearchableSelectOption } from "@/components/ui/SearchableSelect"
 import { useDynamicModels } from "@/hooks/useDynamicModels"
@@ -15,6 +15,10 @@ interface ControlBarProps {
   setProvider: (provider: any) => void
   model: string
   setModel: (model: string) => void
+  tone: string
+  setTone: (tone: string) => void
+  mode: string
+  setMode: (mode: string) => void
   temperature: number
   setTemperature: (temp: number) => void
   apiKeys: ApiKeys
@@ -26,6 +30,10 @@ export default function ControlBar({
   setProvider,
   model,
   setModel,
+  tone,
+  setTone,
+  mode,
+  setMode,
   temperature,
   setTemperature,
   apiKeys,
@@ -96,7 +104,43 @@ export default function ControlBar({
         </div>
 
 
-        {/* Temperature Slidert */}
+        {/* Mode Selector */}
+        <div className="flex items-center gap-2">
+          <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">
+            {t("mode") || "Mode"}
+          </label>
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
+            className="px-2.5 py-1.5 rounded-[8px] bg-[var(--panel)] border border-[var(--border)] text-xs font-semibold text-zinc-200 focus:outline-none cursor-pointer hover:border-zinc-600 transition-colors"
+          >
+            {MODES.map((m) => (
+              <option key={m.id} value={m.id}>
+                {t(`mode${m.id.charAt(0).toUpperCase() + m.id.slice(1).replace(/-([a-z])/g, (_, c) => c.toUpperCase())}`) || m.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Tone Selector */}
+        <div className="flex items-center gap-2">
+          <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">
+            {t("tone") || "Tone"}
+          </label>
+          <select
+            value={tone}
+            onChange={(e) => setTone(e.target.value)}
+            className="px-2.5 py-1.5 rounded-[8px] bg-[var(--panel)] border border-[var(--border)] text-xs font-semibold text-zinc-200 focus:outline-none cursor-pointer hover:border-zinc-600 transition-colors"
+          >
+            {TONES.map((tn) => (
+              <option key={tn.id} value={tn.id}>
+                {t(`tone${tn.id.charAt(0).toUpperCase() + tn.id.slice(1)}`) || tn.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Temperature Slider */}
         <div className="flex items-center gap-2 group relative min-h-[44px] md:min-h-0">
           <label className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-wider">TEMP: {temperature}</label>
           <input
@@ -106,7 +150,7 @@ export default function ControlBar({
             step="0.1"
             value={temperature}
             onChange={(e) => setTemperature(parseFloat(e.target.value))}
-            className="w-24 h-1.5 bg-[var(--panel)] border border-[var(--border)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
+            className="w-20 h-1.5 bg-[var(--panel)] border border-[var(--border)] rounded-lg appearance-none cursor-pointer accent-[var(--primary)]"
           />
         </div>
       </div>

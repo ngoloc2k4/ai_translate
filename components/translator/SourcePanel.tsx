@@ -90,6 +90,7 @@ export default function SourcePanel({
             <button
               onClick={onTranslate}
               disabled={!sourceText.trim() || isTranslating}
+              title="Ctrl + Enter to translate"
               className="flex items-center gap-2 px-6 py-2.5 rounded-[12px] bg-[var(--primary)] text-white font-bold text-xs shadow-xl shadow-[var(--primary)]/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:grayscale pointer-events-auto"
             >
               {isTranslating ? (
@@ -99,7 +100,8 @@ export default function SourcePanel({
                 </>
               ) : (
                 <>
-                  {t("translate")}
+                  <span>{t("translate")}</span>
+                  <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[9px] bg-white/20 rounded font-mono">Ctrl+↵</kbd>
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
