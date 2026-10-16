@@ -18,7 +18,6 @@ export default function ResultPanel({
 }: ResultPanelProps) {
   const { showToast } = useToast()
   const [copied, setCopied] = useState(false)
-
   const [isSpeaking, setIsSpeaking] = useState(false)
 
   const handleCopy = async () => {
@@ -28,7 +27,6 @@ export default function ResultPanel({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      console.error("Clipboard error:", err)
       showToast(t("clipboardError"), "error")
     }
   }
@@ -62,19 +60,38 @@ export default function ResultPanel({
     URL.revokeObjectURL(url)
   }
 
+  const charCount = translatedText.length
+  const wordCount = translatedText.trim() ? translatedText.trim().split(/\s+/).length : 0
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[20px] shadow-sm relative overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border)] bg-[var(--panel)]/50">
-        <span className="text-[0.625rem] font-bold text-zinc-500 uppercase tracking-widest">{t("translated")}</span>
-        <div className="flex items-center gap-1.5">
+    <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-2xl shadow-sm relative overflow-hidden transition-all">
+      {/* Top Header Bar */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-zinc-900/40 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
+            {t("translated")}
+          </span>
+          {translatedText && (
+            <span className="text-[10px] text-zinc-500 font-mono">
+              • {wordCount} {wordCount === 1 ? "word" : "words"}
+            </span>
+          )}
+        </div>
+
+        {/* Toolbar Actions */}
+        <div className="flex items-center gap-1">
           {translatedText && (
             <>
               {/* Text-To-Speech */}
               <button
+                type="button"
                 onClick={handleSpeak}
+                aria-label={isSpeaking ? "Stop speaking translation" : "Speak translation"}
                 title={isSpeaking ? "Stop speaking" : "Speak translation"}
-                className={`p-1.5 rounded-md hover:bg-[var(--background)] transition-colors flex items-center gap-1.5 ${
-                  isSpeaking ? "text-emerald-400" : "text-zinc-500 hover:text-zinc-300"
+                className={`p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none cursor-pointer ${
+                  isSpeaking
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,67 +99,108 @@ export default function ResultPanel({
                 </svg>
               </button>
 
-              {/* Export/Download */}
+              {/* Download */}
               <button
+                type="button"
                 onClick={handleDownload}
+                aria-label="Download translation as text file"
                 title="Download as text file"
-                className="p-1.5 rounded-md hover:bg-[var(--background)] transition-colors text-zinc-500 hover:text-zinc-300 flex items-center gap-1.5"
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-colors cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               </button>
 
-              {/* Copy */}
+              {/* Copy Button */}
               <button
+                type="button"
                 onClick={handleCopy}
-                className="p-1.5 rounded-md hover:bg-[var(--background)] transition-colors text-zinc-500 hover:text-zinc-300 flex items-center gap-1.5"
+                aria-label={copied ? "Copied to clipboard" : "Copy translation"}
+                title={copied ? "Copied!" : "Copy translation"}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none cursor-pointer ${
+                  copied
+                    ? "bg-emerald-500/15 text-emerald-400 font-semibold"
+                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                }`}
               >
-                <span className="text-[0.625rem] font-bold uppercase">{copied ? t("copied") : t("copy")}</span>
                 {copied ? (
-                  <svg className="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+                  <>
+                    <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{t("copied") || "Copied!"}</span>
+                  </>
                 ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                  </svg>
+                  <>
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span>{t("copy") || "Copy"}</span>
+                  </>
                 )}
               </button>
             </>
           )}
         </div>
       </div>
-      <div className="flex-1 min-h-0 p-6 relative overflow-y-auto custom-scrollbar">
+
+      {/* Main Body */}
+      <div 
+        className="flex-1 min-h-0 p-5 relative overflow-y-auto custom-scrollbar flex flex-col"
+        aria-live="polite"
+      >
         {error ? (
-          <div className="flex flex-col items-center justify-center h-full text-red-500/80 p-4 text-center">
-            <svg className="w-10 h-10 mb-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span className="text-sm font-semibold mb-1">Error</span>
-            <span className="text-xs text-red-400/80">{error}</span>
+          <div 
+            role="alert" 
+            className="flex flex-col items-center justify-center my-auto p-6 bg-red-950/20 border border-red-900/40 rounded-xl text-center"
+          >
+            <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center mb-3 text-red-400">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <span className="text-sm font-semibold text-red-300 mb-1">Translation Error</span>
+            <span className="text-xs text-red-400/90 max-w-md">{error}</span>
           </div>
         ) : isTranslating && !translatedText ? (
-          <div className="flex flex-col gap-3">
-            <div className="h-4 bg-zinc-800/50 rounded-md animate-pulse w-3/4"></div>
-            <div className="h-4 bg-zinc-800/50 rounded-md animate-pulse w-full"></div>
-            <div className="h-4 bg-zinc-800/50 rounded-md animate-pulse w-5/6"></div>
+          <div className="space-y-3.5 my-2">
+            <div className="h-4 skeleton-shimmer rounded-lg w-3/4" />
+            <div className="h-4 skeleton-shimmer rounded-lg w-full" />
+            <div className="h-4 skeleton-shimmer rounded-lg w-5/6" />
+            <div className="h-4 skeleton-shimmer rounded-lg w-2/3" />
           </div>
         ) : translatedText ? (
-          <div 
-            className="text-zinc-200 leading-relaxed whitespace-pre-wrap transition-all duration-300 text-[1rem]"
-          >
+          <div className="flex-1 text-slate-100 leading-relaxed whitespace-pre-wrap selection:bg-blue-500/30">
             {translatedText}
           </div>
         ) : (
-          <div className="h-full flex flex-col items-center justify-center text-zinc-600">
-            <svg className="w-12 h-12 mb-3 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
-            </svg>
-            <span className="text-xs uppercase tracking-widest font-semibold opacity-30">{t("translatedText")}</span>
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 my-auto">
+            <div className="w-12 h-12 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-center mb-3 text-zinc-500">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
+              </svg>
+            </div>
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">
+              {t("translatedText") || "Translation Output"}
+            </p>
+            <p className="text-xs text-zinc-500 max-w-xs">
+              Type or paste text on the left and click Translate (or press <kbd className="px-1 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Ctrl+↵</kbd>)
+            </p>
           </div>
         )}
       </div>
+
+      {/* Bottom Status Info */}
+      {translatedText && (
+        <div className="px-4 py-2 border-t border-zinc-800/60 bg-zinc-900/20 flex items-center justify-between text-[11px] font-mono text-zinc-500">
+          <span>{charCount.toLocaleString()} chars</span>
+          <span className="flex items-center gap-1.5 text-emerald-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Completed
+          </span>
+        </div>
+      )}
     </div>
   )
 }

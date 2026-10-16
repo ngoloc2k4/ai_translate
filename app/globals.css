@@ -1,11 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b1220;
-  --foreground: #e5e7eb;
-  --panel: #111827;
-  --border: #1f2937;
-  --primary: #137fec;
+  --background: #090d16;
+  --foreground: #f1f5f9;
+  --panel: #0f172a;
+  --panel-elevated: #1e293b;
+  --border: #1e293b;
+  --border-highlight: #334155;
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-glow: rgba(59, 130, 246, 0.25);
 
   /* Font sizes - default */
   --font-size-base: 14px;
@@ -15,25 +19,36 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-panel: var(--panel);
+  --color-panel-elevated: var(--panel-elevated);
   --color-border: var(--border);
+  --color-border-highlight: var(--border-highlight);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
 }
 
 html {
   font-size: var(--font-size-base);
+  color-scheme: dark;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  font-size: 1rem; /* Relative to html font-size */
+  font-size: 1rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
 }
 
 /* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -41,20 +56,41 @@ body {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 10px;
+  background: #273549;
+  border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #374151;
+  background: #3b4d68;
 }
 
 /* Mono font for text areas */
 .mono-font {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* Textarea and output use inline styles for dynamic font-size */
 .text-content {
   line-height: 1.625;
+}
+
+/* Subtle Shimmer Animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.4) 0%,
+    rgba(51, 65, 85, 0.6) 50%,
+    rgba(30, 41, 59, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite ease-in-out;
 }

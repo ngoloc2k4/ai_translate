@@ -41,14 +41,12 @@ export default function HistoryPage() {
   }
 
   const filteredItems = historyItems.filter(item => {
-    // Text search
     const query = searchQuery.toLowerCase()
     const matchesSearch = !query || 
       item.sourceText.toLowerCase().includes(query) || 
       item.translatedText.toLowerCase().includes(query) ||
       item.provider.toLowerCase().includes(query)
       
-    // Time filter
     let matchesTime = true
     const itemDate = new Date(item.id)
     const today = new Date()
@@ -76,14 +74,12 @@ export default function HistoryPage() {
     const clientKey = (apiKeys as any)?.[provider] as string || ""
     const hasServerKey = !!(serverKeys && serverKeys[provider])
 
-    // If neither client key nor server key is available, prompt user
     if (!clientKey && !hasServerKey) {
       const providerName = String(provider).charAt(0).toUpperCase() + String(provider).slice(1)
       showToast(`Please configure your ${providerName} API key in Settings first.`, "error")
       return
     }
 
-    // Use client key if available, otherwise pass empty string (server-side key will be used)
     const apiKey = clientKey || ""
 
     translate({
@@ -91,7 +87,7 @@ export default function HistoryPage() {
       sourceLang: selectedItem.sourceLang,
       targetLang: selectedItem.targetLang,
       provider: selectedItem.provider as any,
-      model: selectedItem.model || "gemini-2.0-flash",
+      model: selectedItem.model || "gemini-2.5-flash",
       apiKey,
       baseUrl: selectedItem.provider === "custom" ? apiKeys?.customEndpoint : undefined,
       options: {
@@ -107,43 +103,45 @@ export default function HistoryPage() {
 
   if (showDetail && selectedItem) {
     return (
-      <div className="flex-1 flex flex-col p-4 gap-4 overflow-hidden">
-        {/* Detail View */}
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">{t("history")}</h2>
-          <button
-            onClick={() => {
-              setShowDetail(false)
-              setSelectedItem(null)
-              setEditedText("")
-            }}
-            className="px-4 py-2 rounded-[10px] bg-[var(--panel)] border border-[var(--border)] text-xs font-semibold text-zinc-200 hover:bg-zinc-800 transition-colors"
-          >
-            ← Back
-          </button>
+      <div className="flex-1 flex flex-col p-3 sm:p-6 gap-4 overflow-hidden bg-[var(--background)]">
+        {/* Detail View Header */}
+        <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                setShowDetail(false)
+                setSelectedItem(null)
+                setEditedText("")
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--panel)] border border-[var(--border)] text-xs font-semibold text-zinc-300 hover:text-white hover:border-zinc-700 transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Back to History</span>
+            </button>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider">Translation Detail</h2>
+          </div>
         </div>
 
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 overflow-hidden">
           {/* Source Input (Editable) */}
-          <div className="flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[10px] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--background)]/30">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-zinc-600"></div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                  {getLanguageName(selectedItem.sourceLang)}
-                </span>
-              </div>
+          <div className="flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-zinc-900/40">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                {getLanguageName(selectedItem.sourceLang)}
+              </span>
             </div>
             <textarea
               value={editedText}
               onChange={(e) => setEditedText(e.target.value)}
-              className="flex-1 w-full bg-transparent p-5 text-sm leading-relaxed text-zinc-200 focus:outline-none focus:ring-0 border-none resize-none custom-scrollbar mono-font"
+              className="flex-1 w-full bg-transparent p-4 text-sm leading-relaxed text-zinc-100 focus:outline-none border-none resize-none custom-scrollbar"
             />
-            <div className="p-3 border-t border-[var(--border)] flex gap-2">
+            <div className="p-3 border-t border-[var(--border)] flex justify-end">
               <button
                 onClick={handleTranslateAgain}
                 disabled={loading || !editedText.trim()}
-                className="flex-1 px-4 py-2 rounded-[10px] bg-[var(--primary)] text-white font-bold text-xs shadow-lg shadow-[var(--primary)]/20 hover:brightness-110 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {loading ? t("translating") : t("translate")}
               </button>
@@ -151,15 +149,12 @@ export default function HistoryPage() {
           </div>
 
           {/* Result Output */}
-          <div className="flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-[10px] overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-[var(--background)]/30">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[var(--primary)]"></div>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[var(--primary)]">
-                  {getLanguageName(selectedItem.targetLang)}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
+          <div className="flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-2xl overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-zinc-900/40">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400">
+                {getLanguageName(selectedItem.targetLang)}
+              </span>
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => {
                     const textToSpeak = result || selectedItem.translatedText
@@ -173,7 +168,8 @@ export default function HistoryPage() {
                     }
                   }}
                   title="Speak"
-                  className="p-1 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                  aria-label="Speak text"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
@@ -188,7 +184,8 @@ export default function HistoryPage() {
                     }
                   }}
                   title="Copy"
-                  className="p-1 rounded text-zinc-400 hover:text-zinc-200 transition-colors"
+                  aria-label="Copy translated text"
+                  className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -198,41 +195,34 @@ export default function HistoryPage() {
             </div>
             <div className="flex-1 p-5 overflow-y-auto custom-scrollbar">
               {loading ? (
-                <div className="flex items-center gap-2 text-zinc-500">
-                  <div className="w-4 h-4 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
-                  <span>{t("translating")}</span>
+                <div className="space-y-3">
+                  <div className="h-4 skeleton-shimmer rounded-lg w-3/4" />
+                  <div className="h-4 skeleton-shimmer rounded-lg w-full" />
+                  <div className="h-4 skeleton-shimmer rounded-lg w-5/6" />
                 </div>
               ) : result ? (
-                <div className="text-sm leading-relaxed text-zinc-300 whitespace-pre-wrap">
-                  {result}
-                </div>
+                <p className="text-slate-100 text-sm leading-relaxed whitespace-pre-wrap">{result}</p>
               ) : (
-                <div>
-                  <p className="text-zinc-500 text-sm mb-4">Original translation:</p>
-                  <p className="text-zinc-300 text-sm whitespace-pre-wrap">{selectedItem.translatedText}</p>
-                </div>
+                <p className="text-slate-100 text-sm leading-relaxed whitespace-pre-wrap">{selectedItem.translatedText}</p>
               )}
             </div>
           </div>
         </div>
 
-        {/* Info Bar */}
-        <div className="flex items-center gap-4 p-3 bg-[var(--panel)] border border-[var(--border)] rounded-[10px]">
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
-            <span className="text-zinc-500">Time:</span>
-            <span>{selectedItem.time} ({formatRelativeDate(selectedItem.id)})</span>
+        {/* Metadata Info Bar */}
+        <div className="flex flex-wrap items-center gap-4 p-3 bg-[var(--panel)] border border-[var(--border)] rounded-xl text-xs text-zinc-400 font-mono">
+          <div>
+            <span className="text-zinc-500">TIME:</span> {selectedItem.time} ({formatRelativeDate(selectedItem.id)})
           </div>
-          <div className="w-px h-4 bg-[var(--border)]"></div>
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
-            <span className="text-zinc-500">Provider:</span>
-            <span className="uppercase">{selectedItem.provider}</span>
+          <div className="w-px h-3 bg-zinc-800" />
+          <div>
+            <span className="text-zinc-500">PROVIDER:</span> <span className="uppercase text-blue-400">{selectedItem.provider}</span>
           </div>
           {selectedItem.mode && (
             <>
-              <div className="w-px h-4 bg-[var(--border)]"></div>
-              <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <span className="text-zinc-500">Mode:</span>
-                <span>{selectedItem.mode}</span>
+              <div className="w-px h-3 bg-zinc-800" />
+              <div>
+                <span className="text-zinc-500">MODE:</span> {selectedItem.mode}
               </div>
             </>
           )}
@@ -243,27 +233,29 @@ export default function HistoryPage() {
 
   // History List View
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-[env(safe-area-inset-bottom)]">
-      <div className="flex-1 flex flex-col p-4 overflow-hidden">
+    <div className="flex-1 flex flex-col min-h-0 overflow-hidden pb-[env(safe-area-inset-bottom)] bg-[var(--background)]">
+      <div className="flex-1 flex flex-col p-4 sm:p-6 overflow-hidden">
         {/* Header with Back Button */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => router.push('/')}
-              className="p-2 rounded-[10px] bg-[var(--panel)] border border-[var(--border)] text-zinc-400 hover:text-white hover:border-zinc-600 transition-all"
+              aria-label="Back to Workbench"
+              className="p-2 rounded-xl bg-[var(--panel)] border border-[var(--border)] text-zinc-400 hover:text-white hover:border-zinc-700 transition-all cursor-pointer"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
-            <h2 className="text-lg font-bold text-white">{t("history")}</h2>
+            <h2 className="text-base sm:text-lg font-bold text-white uppercase tracking-wider">{t("history")}</h2>
           </div>
           {historyItems.length > 0 && (
             <button
               onClick={clearHistory}
-              className="px-3 py-1.5 rounded-md bg-red-500/10 border border-red-500/20 text-xs text-red-500 hover:bg-red-500/20 font-medium transition-colors"
+              aria-label="Clear all history"
+              className="px-3 py-1.5 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-400 hover:bg-red-500/20 font-semibold transition-colors cursor-pointer"
             >
-              {t("clear") || "Clear"}
+              {t("clear") || "Clear All"}
             </button>
           )}
         </div>
@@ -278,62 +270,65 @@ export default function HistoryPage() {
             </div>
             <input
               type="text"
-              placeholder="Search context..."
+              placeholder="Search translation history..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[var(--panel)] border border-[var(--border)] rounded-[10px] text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--primary)] transition-colors"
+              className="w-full pl-9 pr-4 py-2 bg-[var(--panel)] border border-[var(--border)] rounded-xl text-xs sm:text-sm text-white placeholder-zinc-500 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-colors"
             />
           </div>
-          <div className="flex p-1 bg-[var(--panel)] border border-[var(--border)] rounded-[10px] overflow-x-auto custom-scrollbar">
-            <button
-              onClick={() => setTimeFilter("all")}
-              className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${timeFilter === "all" ? "bg-[var(--primary)] text-white shadow" : "text-zinc-500 hover:text-zinc-300"}`}
-            >
-              All Time
-            </button>
-            <button
-              onClick={() => setTimeFilter("week")}
-              className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${timeFilter === "week" ? "bg-[var(--primary)] text-white shadow" : "text-zinc-500 hover:text-zinc-300"}`}
-            >
-              Last 7 Days
-            </button>
-            <button
-              onClick={() => setTimeFilter("today")}
-              className={`px-3 py-1 rounded-md text-xs font-medium whitespace-nowrap transition-colors ${timeFilter === "today" ? "bg-[var(--primary)] text-white shadow" : "text-zinc-500 hover:text-zinc-300"}`}
-            >
-              Today
-            </button>
+          <div className="flex p-1 bg-[var(--panel)] border border-[var(--border)] rounded-xl overflow-x-auto custom-scrollbar gap-1">
+            {(["all", "week", "today"] as const).map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setTimeFilter(filter)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                  timeFilter === filter 
+                    ? "bg-blue-600 text-white shadow-sm shadow-blue-500/30" 
+                    : "text-zinc-400 hover:text-white"
+                }`}
+              >
+                {filter === "all" ? "All Time" : filter === "week" ? "Last 7 Days" : "Today"}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* History List */}
         {filteredItems.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-zinc-500">
-            <div className="text-center">
-              <svg className="w-16 h-16 mx-auto mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 text-zinc-500">
+            <div className="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-3 text-zinc-600">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <p>No results found</p>
             </div>
+            <p className="text-sm font-semibold text-zinc-400 mb-1">No translation records found</p>
+            <p className="text-xs text-zinc-500 max-w-xs mb-4">Translations you perform will be saved here automatically.</p>
+            <button
+              onClick={() => router.push('/')}
+              className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold shadow-md shadow-blue-500/20"
+            >
+              Start Translating
+            </button>
           </div>
         ) : (
-          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 pb-2">
+          <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2.5 pb-2">
             {filteredItems.map((item) => (
               <div
                 key={item.id}
                 onClick={() => handleReuse(item)}
-                className="p-4 rounded-[10px] bg-[var(--panel)] border border-[var(--border)] cursor-pointer hover:border-[var(--primary)] transition-all group"
+                className="p-4 rounded-xl bg-[var(--panel)] border border-[var(--border)] hover:border-zinc-700/80 hover:bg-zinc-900/50 cursor-pointer transition-all group shadow-sm"
               >
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-800/50 px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-800 px-2 py-0.5 rounded-md font-mono">
                       {formatRelativeDate(item.id)}
                     </span>
-                    <span className="text-[10px] text-zinc-500">{item.time}</span>
-                    <span className="text-[10px] text-zinc-400 uppercase px-2 py-0.5 rounded bg-[var(--background)] border border-[var(--border)]">
+                    <span className="text-[10px] text-zinc-500 font-mono">{item.time}</span>
+                    <span className="text-[10px] font-mono text-blue-400 uppercase px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/20">
                       {item.provider}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={async (e) => {
                         e.stopPropagation()
@@ -341,7 +336,8 @@ export default function HistoryPage() {
                         showToast(t("copied") || "Copied!", "success")
                       }}
                       title="Copy translation"
-                      className="p-1.5 rounded-[10px] hover:bg-[var(--background)] text-zinc-400 hover:text-white transition"
+                      aria-label="Copy translation"
+                      className="p-1.5 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition cursor-pointer"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -353,7 +349,8 @@ export default function HistoryPage() {
                         deleteItem(item.id)
                       }}
                       title="Delete entry"
-                      className="p-1.5 rounded-[10px] hover:bg-red-500/20 text-zinc-400 hover:text-red-500 transition"
+                      aria-label="Delete entry"
+                      className="p-1.5 rounded-lg hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition cursor-pointer"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -361,11 +358,11 @@ export default function HistoryPage() {
                     </button>
                   </div>
                 </div>
-                <p className="text-zinc-300 text-sm line-clamp-2 mb-1">{item.sourceText}</p>
-                <p className="text-[var(--primary)] text-sm line-clamp-2">{item.translatedText}</p>
-                <div className="flex items-center gap-2 mt-2 text-[10px] text-zinc-500">
+                <p className="text-zinc-200 text-sm line-clamp-2 mb-1.5 leading-relaxed">{item.sourceText}</p>
+                <p className="text-blue-400 text-sm line-clamp-2 leading-relaxed font-medium">{item.translatedText}</p>
+                <div className="flex items-center gap-2 mt-2.5 text-[10px] text-zinc-500 font-mono">
                   <span>{getLanguageName(item.sourceLang)}</span>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                   </svg>
                   <span>{getLanguageName(item.targetLang)}</span>

@@ -203,7 +203,7 @@ export default function TranslatorPanel() {
         onClose={() => setShowSettings(false)}
       />
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1.5 shrink-0">
         <LanguageSelector
           sourceLang={sourceLang}
           setSourceLang={setSourceLang}
@@ -233,7 +233,7 @@ export default function TranslatorPanel() {
         />
       </div>
 
-      <div className="flex-1 grid grid-cols-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1 gap-4 overflow-hidden min-h-0 px-4 pb-4">
+      <div className="flex-1 grid grid-cols-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1 gap-3 sm:gap-4 overflow-hidden min-h-0 px-2 sm:px-4 pb-2 sm:pb-4">
         <SourcePanel
           sourceText={sourceText}
           setSourceText={setSourceText}
