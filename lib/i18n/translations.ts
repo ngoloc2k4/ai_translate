@@ -4,7 +4,7 @@ export const translations = {
   vi: {
     // Header
     appTitle: "Translation Lab",
-    workbench: "Bàn làm việc",
+    workbench: "Dịch thuật",
     history: "Lịch sử",
     apiKeys: "Khóa API",
     docs: "Tài liệu",
@@ -14,9 +14,15 @@ export const translations = {
     to: "Sang",
     sourceLanguage: "Ngôn ngữ nguồn",
     targetLanguage: "Ngôn ngữ đích",
-    autoDetect: "Tự động phát hiện",
+    autoDetect: "Phát hiện ngôn ngữ",
     swapLanguages: "Đổi ngôn ngữ",
     swap: "Đổi chiều",
+    searchLanguage: "Tìm kiếm ngôn ngữ...",
+    allLanguages: "Tất cả ngôn ngữ",
+    popularLanguages: "Phổ biến",
+    autoTranslate: "Tự động dịch",
+    autoTranslateHint: "Tự động dịch sau 1s dừng gõ",
+    clearText: "Xóa văn bản",
 
     // Provider & Model & Engine
     provider: "Nhà cung cấp",
@@ -153,7 +159,7 @@ export const translations = {
   en: {
     // Header
     appTitle: "Translation Lab",
-    workbench: "Workbench",
+    workbench: "Translate",
     history: "History",
     apiKeys: "API Keys",
     docs: "Docs",
@@ -166,6 +172,12 @@ export const translations = {
     autoDetect: "Auto Detect",
     swapLanguages: "Swap languages",
     swap: "Swap",
+    searchLanguage: "Search language...",
+    allLanguages: "All Languages",
+    popularLanguages: "Popular",
+    autoTranslate: "Auto-translate",
+    autoTranslateHint: "Auto-translate 1s after typing stops",
+    clearText: "Clear text",
 
     // Provider & Model & Engine
     provider: "AI Provider",
@@ -302,7 +314,7 @@ export const translations = {
   ko: {
     // Header
     appTitle: "Translation Lab",
-    workbench: "워크벤치",
+    workbench: "번역",
     history: "기록",
     apiKeys: "API 키",
     docs: "문서",
@@ -315,6 +327,12 @@ export const translations = {
     autoDetect: "자동 감지",
     swapLanguages: "언어 교환",
     swap: "교환",
+    searchLanguage: "언어 검색...",
+    allLanguages: "모든 언어",
+    popularLanguages: "인기 언어",
+    autoTranslate: "자동 번역",
+    autoTranslateHint: "입력 중지 1초 후 자동 번역",
+    clearText: "텍스트 지우기",
 
     // Provider & Model & Engine
     provider: "AI 공급자",

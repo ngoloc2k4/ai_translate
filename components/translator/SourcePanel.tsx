@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { VOICE_LANGUAGE_MAP } from "@/lib/constants/languages"
 
 interface SourcePanelProps {
   sourceText: string
@@ -8,6 +9,9 @@ interface SourcePanelProps {
   onTranslate: () => void
   onStop: () => void
   isTranslating: boolean
+  sourceLang: string
+  autoTranslate?: boolean
+  setAutoTranslate?: (enabled: boolean) => void
   t: (key: any, fallback?: string) => string
 }
 
@@ -17,6 +21,9 @@ export default function SourcePanel({
   onTranslate,
   onStop,
   isTranslating,
+  sourceLang,
+  autoTranslate = true,
+  setAutoTranslate,
   t
 }: SourcePanelProps) {
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -32,6 +39,8 @@ export default function SourcePanel({
     }
 
     const utterance = new SpeechSynthesisUtterance(sourceText)
+    const voiceLang = VOICE_LANGUAGE_MAP[sourceLang] || (sourceLang === "auto" ? "vi-VN" : sourceLang)
+    utterance.lang = voiceLang
     utterance.onend = () => setIsSpeaking(false)
     utterance.onerror = () => setIsSpeaking(false)
     setIsSpeaking(true)
@@ -52,41 +61,80 @@ export default function SourcePanel({
     }
   }
 
+  const handleClear = () => {
+    setSourceText("")
+    textareaRef.current?.focus()
+  }
+
   const charCount = sourceText.length
   const wordCount = sourceText.trim() ? sourceText.trim().split(/\s+/).length : 0
   const isNearLimit = charCount > 4500
   const hasText = sourceText.trim().length > 0
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col bg-[#0f172a] border border-slate-800 rounded-2xl shadow-sm relative group overflow-hidden focus-within:border-blue-500/50 transition-all">
+    <div className="flex-1 min-h-[180px] sm:min-h-0 flex flex-col bg-[#0f172a] border border-slate-800 rounded-2xl shadow-sm relative group overflow-hidden focus-within:border-blue-500/50 transition-all">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/80 bg-slate-900/40">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-300">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-slate-800/80 bg-slate-900/50 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-bold text-slate-300 truncate">
             {t("source") || "Văn bản gốc"}
           </span>
           {hasText && (
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] text-slate-500 font-mono hidden xs:inline shrink-0">
               • {wordCount} {t("words") || "từ"}
             </span>
           )}
         </div>
 
         {/* Quick Toolbar Buttons */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {/* Auto Translate Toggle */}
+          {setAutoTranslate && (
+            <button
+              type="button"
+              onClick={() => setAutoTranslate(!autoTranslate)}
+              aria-label={t("autoTranslateHint") || "Tự động dịch sau 1s"}
+              title={autoTranslate ? "Tự động dịch: ĐANG BẬT (Dịch sau 1s khi ngừng gõ)" : "Tự động dịch: ĐANG TẮT"}
+              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                autoTranslate
+                  ? "bg-blue-500/15 text-blue-400 border border-blue-500/30 font-semibold"
+                  : "bg-slate-800/60 text-slate-400 hover:text-white"
+              }`}
+            >
+              <span className={`w-1.5 h-1.5 rounded-full ${autoTranslate ? "bg-blue-400 animate-pulse" : "bg-slate-500"}`} />
+              <span className="text-[11px]">{t("autoTranslate") || "Tự động dịch"}</span>
+            </button>
+          )}
+
           {/* Paste */}
           <button
             type="button"
             onClick={handlePaste}
             aria-label={t("paste") || "Dán"}
             title="Dán từ bộ nhớ tạm"
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-medium transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 text-xs font-medium transition-colors cursor-pointer"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <span className="text-[11px]">{t("paste") || "Dán"}</span>
+            <span className="text-[11px] hidden xs:inline">{t("paste") || "Dán"}</span>
           </button>
+
+          {/* Clear Button (Prominently displayed whenever there is text) */}
+          {hasText && (
+            <button
+              type="button"
+              onClick={handleClear}
+              aria-label={t("clear") || "Xóa"}
+              title="Xóa toàn bộ văn bản (Clear)"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 text-xs font-semibold border border-red-500/20 transition-all cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              <span className="text-[11px]">{t("clear") || "Xóa"}</span>
+            </button>
+          )}
 
           {/* Speech */}
           {hasText && (
@@ -106,40 +154,22 @@ export default function SourcePanel({
               </svg>
             </button>
           )}
-
-          {/* Clear */}
-          {hasText && (
-            <button
-              type="button"
-              onClick={() => {
-                setSourceText("")
-                textareaRef.current?.focus()
-              }}
-              aria-label={t("clear") || "Xóa"}
-              title="Xóa văn bản"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          )}
         </div>
       </div>
 
       {/* Editor Body */}
-      <div className="flex-1 min-h-0 relative p-3 sm:p-4 flex flex-col">
+      <div className="flex-1 min-h-[90px] sm:min-h-0 relative p-3 sm:p-4 flex flex-col">
         <textarea
           ref={textareaRef}
           value={sourceText}
           onChange={(e) => setSourceText(e.target.value)}
           placeholder={t("sourcePlaceholder") || "Nhập hoặc dán văn bản cần dịch..."}
           aria-label="Văn bản cần dịch"
-          className="flex-1 w-full bg-transparent border-none outline-none text-white resize-none scroll-smooth custom-scrollbar leading-relaxed placeholder-slate-500 text-sm sm:text-base font-normal"
+          className="flex-1 w-full bg-transparent border-none outline-none text-white resize-none scroll-smooth custom-scrollbar leading-relaxed placeholder-slate-500 text-sm sm:text-base font-normal min-h-[80px] sm:min-h-[140px]"
         />
 
         {/* Footer Actions & Counter */}
-        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between">
+        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <span className={`text-[11px] font-mono ${isNearLimit ? "text-amber-400 font-bold" : "text-slate-500"}`}>
               {charCount.toLocaleString()} / 5,000
@@ -167,7 +197,7 @@ export default function SourcePanel({
               onClick={onTranslate}
               disabled={!hasText || isTranslating}
               aria-label={t("translate") || "Dịch"}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none ${
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none min-h-[40px] ${
                 hasText && !isTranslating
                   ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 active:scale-95"
                   : isTranslating

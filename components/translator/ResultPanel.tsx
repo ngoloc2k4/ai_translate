@@ -2,10 +2,12 @@
 
 import { useState } from "react"
 import { useToast } from "@/components/ui/Toast"
+import { VOICE_LANGUAGE_MAP } from "@/lib/constants/languages"
 
 interface ResultPanelProps {
   translatedText: string
   isTranslating: boolean
+  targetLang?: string
   error?: string | null
   t: (key: any, fallback?: string) => string
 }
@@ -13,6 +15,7 @@ interface ResultPanelProps {
 export default function ResultPanel({
   translatedText,
   isTranslating,
+  targetLang = "en",
   error,
   t
 }: ResultPanelProps) {
@@ -41,6 +44,7 @@ export default function ResultPanel({
     }
 
     const utterance = new SpeechSynthesisUtterance(translatedText)
+    utterance.lang = VOICE_LANGUAGE_MAP[targetLang] || "en-US"
     utterance.onend = () => setIsSpeaking(false)
     utterance.onerror = () => setIsSpeaking(false)
     setIsSpeaking(true)
@@ -64,15 +68,15 @@ export default function ResultPanel({
   const wordCount = translatedText.trim() ? translatedText.trim().split(/\s+/).length : 0
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col bg-[#0f172a] border border-slate-800 rounded-2xl shadow-sm relative overflow-hidden transition-all">
+    <div className="flex-1 min-h-[160px] sm:min-h-0 flex flex-col bg-[#0f172a] border border-slate-800 rounded-2xl shadow-sm relative overflow-hidden transition-all">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/80 bg-slate-900/40">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-slate-300">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2 border-b border-slate-800/80 bg-slate-900/50 shrink-0">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="text-xs font-bold text-slate-300 truncate">
             {t("resultTitle") || "Bản dịch"}
           </span>
           {translatedText && (
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] text-slate-500 font-mono hidden xs:inline shrink-0">
               • {wordCount} {t("words") || "từ"}
             </span>
           )}
@@ -87,7 +91,7 @@ export default function ResultPanel({
                 type="button"
                 onClick={handleSpeak}
                 aria-label={isSpeaking ? "Dừng đọc" : "Nghe phát âm bản dịch"}
-                title={isSpeaking ? "Dừng đọc" : "Nghe phát âm"}
+                title={isSpeaking ? "Dừng đọc" : "Nghe phát âm bản dịch"}
                 className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                   isSpeaking
                     ? "bg-emerald-500/15 text-emerald-400"
@@ -146,24 +150,24 @@ export default function ResultPanel({
 
       {/* Main Content Body */}
       <div 
-        className="flex-1 min-h-0 p-4 sm:p-5 relative overflow-y-auto custom-scrollbar flex flex-col"
+        className="flex-1 min-h-[90px] sm:min-h-0 p-3 sm:p-5 relative overflow-y-auto custom-scrollbar flex flex-col"
         aria-live="polite"
       >
         {error ? (
           <div 
             role="alert" 
-            className="flex flex-col items-center justify-center my-auto p-6 bg-red-950/20 border border-red-900/40 rounded-2xl text-center"
+            className="flex flex-col items-center justify-center my-auto p-4 sm:p-6 bg-red-950/20 border border-red-900/40 rounded-2xl text-center"
           >
-            <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center mb-3 text-red-400">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-9 h-9 rounded-full bg-red-500/15 flex items-center justify-center mb-2.5 text-red-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <span className="text-sm font-semibold text-red-300 mb-1">{t("translationError") || "Lỗi dịch thuật"}</span>
+            <span className="text-xs sm:text-sm font-semibold text-red-300 mb-1">{t("translationError") || "Lỗi dịch thuật"}</span>
             <span className="text-xs text-red-400/90 max-w-md">{error}</span>
           </div>
         ) : isTranslating && !translatedText ? (
-          <div className="space-y-3 my-auto w-full">
+          <div className="space-y-3 my-auto w-full py-4">
             <div className="h-4 skeleton-shimmer rounded-lg w-3/4" />
             <div className="h-4 skeleton-shimmer rounded-lg w-full" />
             <div className="h-4 skeleton-shimmer rounded-lg w-5/6" />
@@ -174,16 +178,16 @@ export default function ResultPanel({
             {translatedText}
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 my-auto">
-            <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-3 text-slate-500">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-3 sm:p-6 my-auto">
+            <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-2 text-slate-500">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
             </div>
-            <p className="text-sm font-semibold text-slate-300 mb-1.5">
+            <p className="text-xs sm:text-sm font-semibold text-slate-300 mb-1">
               {t("emptyStateTitle") || "Bản dịch sẽ xuất hiện ở đây"}
             </p>
-            <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+            <p className="text-[11px] sm:text-xs text-slate-500 max-w-xs leading-relaxed">
               {t("emptyStateDesc") || "Nhập hoặc dán văn bản phía trên rồi nhấn nút Dịch để bắt đầu."}
             </p>
           </div>
@@ -192,7 +196,7 @@ export default function ResultPanel({
 
       {/* Bottom Status Info */}
       {translatedText && (
-        <div className="px-4 py-2 border-t border-slate-800/80 bg-slate-900/30 flex items-center justify-between text-[11px] font-mono text-slate-400">
+        <div className="px-3 sm:px-4 py-1.5 sm:py-2 border-t border-slate-800/80 bg-slate-900/30 flex items-center justify-between text-[11px] font-mono text-slate-400 shrink-0">
           <span>{charCount.toLocaleString()} {t("chars") || "ký tự"}</span>
           <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

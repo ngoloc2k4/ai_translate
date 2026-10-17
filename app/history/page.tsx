@@ -6,15 +6,14 @@ import { useTranslation as useI18n } from "@/lib/i18n/useTranslation"
 import { useHistory } from "@/hooks/useHistory"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useRouter } from "next/navigation"
-import { LANGUAGES } from "@/lib/constants/languages"
+import { LANGUAGES, getLanguageName as getLangName } from "@/lib/constants/languages"
 import type { ApiKeys, HistoryItem } from "@/types"
 import { useToast } from "@/components/ui/Toast"
-import MobileNav from "@/components/translator/MobileNav"
 import Footer from "@/components/translator/Footer"
 import { useAppSettings } from "@/store/useAppSettings"
 
 export default function HistoryPage() {
-  const { t } = useI18n()
+  const { locale, t } = useI18n()
   const { showToast } = useToast()
   const router = useRouter()
   const [apiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
@@ -98,7 +97,7 @@ export default function HistoryPage() {
   }
 
   const getLanguageName = (code: string) => {
-    return LANGUAGES.find(l => l.code === code)?.name || code
+    return getLangName(code, locale)
   }
 
   if (showDetail && selectedItem) {
@@ -373,7 +372,6 @@ export default function HistoryPage() {
         )}
       </div>
 
-      <MobileNav />
       <div className="hidden md:block">
         <Footer 
           stats={{

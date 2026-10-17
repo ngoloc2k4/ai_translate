@@ -17,7 +17,6 @@ import LanguageSelector from "./translator/LanguageSelector"
 import ControlBar from "./translator/ControlBar"
 import SourcePanel from "./translator/SourcePanel"
 import ResultPanel from "./translator/ResultPanel"
-import MobileNav from "./translator/MobileNav"
 import Footer from "./translator/Footer"
 
 export default function TranslatorPanel() {
@@ -40,9 +39,10 @@ export default function TranslatorPanel() {
   const [mode, setMode] = useState("default")
   const [creativity, setCreativity] = useState<"low" | "default" | "high">("default")
   const [temperature, setTemperature] = useLocalStorage<number>("ai_translate_temperature", 0.7)
+  const [autoTranslate, setAutoTranslate] = useLocalStorage<boolean>("ai_translate_auto_translate", true)
   const [showSettings, setShowSettings] = useState(false)
 
-  // Refs for keyboard shortcut handler to avoid frequent re-subscriptions
+  // Refs for keyboard shortcut & auto-translate handlers
   const sourceTextRef = useRef(sourceText)
   const sourceLangRef = useRef(sourceLang)
   const targetLangRef = useRef(targetLang)
@@ -55,6 +55,7 @@ export default function TranslatorPanel() {
   const apiKeysRef = useRef(apiKeys)
   const serverKeysRef = useRef(serverKeys)
   const loadingRef = useRef(loading)
+  const lastTranslatedTextRef = useRef("")
 
   useEffect(() => {
     sourceTextRef.current = sourceText
@@ -106,6 +107,65 @@ export default function TranslatorPanel() {
     return () => window.removeEventListener("open-settings", handleOpenSettings)
   }, [])
 
+  const handleTranslate = useCallback(() => {
+    const currentText = sourceTextRef.current
+    if (!currentText.trim()) return
+
+    if (currentText.length > MAX_CHARACTERS) {
+      if (shouldShowToast('text_too_long')) {
+        showToast(t("textTooLong"), "error")
+      }
+      return
+    }
+
+    const curProvider = providerRef.current
+    const apiKey = (apiKeysRef.current as any)?.[curProvider] as string || ""
+    const hasServerKey = !!(serverKeysRef.current && serverKeysRef.current[curProvider])
+    if (!apiKey && !hasServerKey) {
+      setError(t("invalidApiKey"))
+      setShowSettings(true)
+      return
+    }
+
+    lastTranslatedTextRef.current = currentText.trim()
+
+    translate({
+      text: currentText,
+      sourceLang: sourceLangRef.current,
+      targetLang: LANGUAGES.find((l) => l.code === targetLangRef.current)?.name || targetLangRef.current,
+      provider: curProvider,
+      model: modelRef.current,
+      apiKey,
+      baseUrl: curProvider === "custom" ? apiKeysRef.current.customEndpoint : undefined,
+      options: {
+        tone: toneRef.current,
+        mode: modeRef.current,
+        creativity: creativityRef.current,
+        temperature: temperatureRef.current,
+      },
+    })
+  }, [translate, t, showToast, setError])
+
+  // Auto-translate on pause (Debounce ~950ms)
+  useEffect(() => {
+    if (!autoTranslate) return
+    const textToTranslate = sourceText.trim()
+    if (!textToTranslate) {
+      lastTranslatedTextRef.current = ""
+      return
+    }
+    if (textToTranslate === lastTranslatedTextRef.current) return
+    if (loading) return
+
+    const timer = setTimeout(() => {
+      if (sourceText.trim() && sourceText.trim() !== lastTranslatedTextRef.current && !loadingRef.current) {
+        handleTranslate()
+      }
+    }, 950)
+
+    return () => clearTimeout(timer)
+  }, [sourceText, autoTranslate, handleTranslate, loading])
+
   // Keyboard shortcuts - uses refs to avoid frequent re-subscriptions
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -114,96 +174,37 @@ export default function TranslatorPanel() {
         if (loadingRef.current) {
           stop()
         } else {
-          // Build translate call using current ref values
-          const text = sourceTextRef.current
-          if (!text.trim()) return
-
-          if (text.length > MAX_CHARACTERS) {
-            if (shouldShowToast('text_too_long')) {
-              showToast(t("textTooLong"), "error")
-            }
-            return
-          }
-
-          const apiKey = (apiKeysRef.current as any)?.[providerRef.current] as string || ""
-          const hasServerKey = !!(serverKeysRef.current && serverKeysRef.current[providerRef.current])
-          if (!apiKey && !hasServerKey) {
-            setError(t("invalidApiKey"))
-            setShowSettings(true)
-            return
-          }
-
-          translate({
-            text,
-            sourceLang: sourceLangRef.current,
-            targetLang: LANGUAGES.find((l) => l.code === targetLangRef.current)?.name || targetLangRef.current,
-            provider: providerRef.current,
-            model: modelRef.current,
-            apiKey,
-            baseUrl: providerRef.current === "custom" ? apiKeysRef.current.customEndpoint : undefined,
-            options: {
-              tone: toneRef.current,
-              mode: modeRef.current,
-              creativity: creativityRef.current,
-              temperature: temperatureRef.current,
-            },
-          })
+          handleTranslate()
         }
       }
     }
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [translate, t, showToast])
-
-  const handleTranslate = useCallback(() => {
-    if (!sourceText.trim()) return
-
-    if (sourceText.length > MAX_CHARACTERS) {
-      if (shouldShowToast('text_too_long')) {
-        showToast(t("textTooLong"), "error")
-      }
-      return
-    }
-
-    const apiKey = (apiKeys as any)?.[provider] as string || ""
-    const hasServerKey = !!(serverKeys && serverKeys[provider])
-    if (!apiKey && !hasServerKey) {
-      setError(t("invalidApiKey"))
-      setShowSettings(true)
-      return
-    }
-
-    translate({
-      text: sourceText,
-      sourceLang,
-      targetLang: LANGUAGES.find((l) => l.code === targetLang)?.name || targetLang,
-      provider,
-      model,
-      apiKey,
-      baseUrl: provider === "custom" ? apiKeys.customEndpoint : undefined,
-      options: { tone, mode, creativity, temperature },
-    })
-  }, [sourceText, sourceLang, targetLang, provider, model, tone, mode, creativity, temperature, apiKeys, translate, t, showToast])
+  }, [handleTranslate, stop])
 
   const swapLanguages = () => {
     if (sourceLang === "auto") return
     const temp = sourceLang
     setSourceLang(targetLang)
     setTargetLang(temp)
+    // If text exists, trigger translation in swapped direction
+    if (sourceText.trim()) {
+      lastTranslatedTextRef.current = ""
+    }
   }
 
   if (!mounted) return null
 
   return (
     <div 
-      className="flex-1 flex flex-col min-h-0 overflow-hidden gap-4 pb-[env(safe-area-inset-bottom)]"
+      className="flex-1 flex flex-col min-h-0 overflow-hidden gap-2.5 sm:gap-3 w-full max-w-full pb-[env(safe-area-inset-bottom)]"
     >
       <SettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
 
-      <div className="flex flex-col gap-1.5 shrink-0">
+      <div className="flex flex-col gap-1.5 shrink-0 w-full max-w-xl mx-auto px-1">
         <LanguageSelector
           sourceLang={sourceLang}
           setSourceLang={setSourceLang}
@@ -233,26 +234,29 @@ export default function TranslatorPanel() {
         />
       </div>
 
-      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-3 sm:gap-4 overflow-y-auto lg:overflow-hidden min-h-0 px-1 sm:px-4 pb-2 sm:pb-4 custom-scrollbar">
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-2.5 sm:gap-4 overflow-y-auto lg:overflow-hidden min-h-0 px-1 sm:px-4 pb-2 sm:pb-3 custom-scrollbar w-full max-w-full">
         <SourcePanel
           sourceText={sourceText}
           setSourceText={setSourceText}
           onTranslate={handleTranslate}
           onStop={stop}
           isTranslating={loading}
+          sourceLang={sourceLang}
+          autoTranslate={autoTranslate}
+          setAutoTranslate={setAutoTranslate}
           t={t}
         />
 
         <ResultPanel
           translatedText={result}
           isTranslating={loading}
+          targetLang={targetLang}
           error={error}
           t={t}
         />
       </div>
 
-      <MobileNav />
-      <div className="hidden md:block">
+      <div className="hidden md:block shrink-0">
         <Footer 
           stats={{
             in: sourceText.length,
