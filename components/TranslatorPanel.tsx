@@ -233,7 +233,7 @@ export default function TranslatorPanel() {
         />
       </div>
 
-      <div className="flex-1 grid grid-cols-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1 gap-3 sm:gap-4 overflow-hidden min-h-0 px-2 sm:px-4 pb-2 sm:pb-4">
+      <div className="flex-1 flex flex-col lg:grid lg:grid-cols-2 gap-3 sm:gap-4 overflow-y-auto lg:overflow-hidden min-h-0 px-1 sm:px-4 pb-2 sm:pb-4 custom-scrollbar">
         <SourcePanel
           sourceText={sourceText}
           setSourceText={setSourceText}

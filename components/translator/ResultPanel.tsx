@@ -7,7 +7,7 @@ interface ResultPanelProps {
   translatedText: string
   isTranslating: boolean
   error?: string | null
-  t: (key: any) => string
+  t: (key: any, fallback?: string) => string
 }
 
 export default function ResultPanel({
@@ -27,7 +27,7 @@ export default function ResultPanel({
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
-      showToast(t("clipboardError"), "error")
+      showToast(t("clipboardError") || "Không thể sao chép vào bộ nhớ tạm", "error")
     }
   }
 
@@ -53,7 +53,7 @@ export default function ResultPanel({
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.href = url
-    link.download = `translation-${Date.now()}.txt`
+    link.download = `ban-dich-${Date.now()}.txt`
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -64,34 +64,34 @@ export default function ResultPanel({
   const wordCount = translatedText.trim() ? translatedText.trim().split(/\s+/).length : 0
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-2xl shadow-sm relative overflow-hidden transition-all">
+    <div className="flex-1 min-h-0 flex flex-col bg-[#0f172a] border border-slate-800 rounded-2xl shadow-sm relative overflow-hidden transition-all">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-zinc-900/40 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/80 bg-slate-900/40">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-            {t("translated")}
+          <span className="text-xs font-bold text-slate-300">
+            {t("resultTitle") || "Bản dịch"}
           </span>
           {translatedText && (
-            <span className="text-[10px] text-zinc-500 font-mono">
-              • {wordCount} {wordCount === 1 ? "word" : "words"}
+            <span className="text-[11px] text-slate-500 font-mono">
+              • {wordCount} {t("words") || "từ"}
             </span>
           )}
         </div>
 
         {/* Toolbar Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           {translatedText && (
             <>
               {/* Text-To-Speech */}
               <button
                 type="button"
                 onClick={handleSpeak}
-                aria-label={isSpeaking ? "Stop speaking translation" : "Speak translation"}
-                title={isSpeaking ? "Stop speaking" : "Speak translation"}
-                className={`p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none cursor-pointer ${
+                aria-label={isSpeaking ? "Dừng đọc" : "Nghe phát âm bản dịch"}
+                title={isSpeaking ? "Dừng đọc" : "Nghe phát âm"}
+                className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                   isSpeaking
                     ? "bg-emerald-500/15 text-emerald-400"
-                    : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
                 }`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,25 +103,24 @@ export default function ResultPanel({
               <button
                 type="button"
                 onClick={handleDownload}
-                aria-label="Download translation as text file"
-                title="Download as text file"
-                className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-colors cursor-pointer"
+                aria-label="Tải về file văn bản"
+                title="Tải về file .txt"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               </button>
 
-              {/* Copy Button */}
+              {/* Copy Button with confirmation feedback */}
               <button
                 type="button"
                 onClick={handleCopy}
-                aria-label={copied ? "Copied to clipboard" : "Copy translation"}
-                title={copied ? "Copied!" : "Copy translation"}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none cursor-pointer ${
+                aria-label={copied ? "Đã sao chép" : "Sao chép bản dịch"}
+                className={`flex items-center gap-1 px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                   copied
-                    ? "bg-emerald-500/15 text-emerald-400 font-semibold"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                    : "bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700"
                 }`}
               >
                 {copied ? (
@@ -129,14 +128,14 @@ export default function ResultPanel({
                     <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span>{t("copied") || "Copied!"}</span>
+                    <span>{t("copied") || "Đã chép!"}</span>
                   </>
                 ) : (
                   <>
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                     </svg>
-                    <span>{t("copy") || "Copy"}</span>
+                    <span>{t("copy") || "Sao chép"}</span>
                   </>
                 )}
               </button>
@@ -145,47 +144,47 @@ export default function ResultPanel({
         </div>
       </div>
 
-      {/* Main Body */}
+      {/* Main Content Body */}
       <div 
-        className="flex-1 min-h-0 p-5 relative overflow-y-auto custom-scrollbar flex flex-col"
+        className="flex-1 min-h-0 p-4 sm:p-5 relative overflow-y-auto custom-scrollbar flex flex-col"
         aria-live="polite"
       >
         {error ? (
           <div 
             role="alert" 
-            className="flex flex-col items-center justify-center my-auto p-6 bg-red-950/20 border border-red-900/40 rounded-xl text-center"
+            className="flex flex-col items-center justify-center my-auto p-6 bg-red-950/20 border border-red-900/40 rounded-2xl text-center"
           >
             <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center mb-3 text-red-400">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <span className="text-sm font-semibold text-red-300 mb-1">Translation Error</span>
+            <span className="text-sm font-semibold text-red-300 mb-1">{t("translationError") || "Lỗi dịch thuật"}</span>
             <span className="text-xs text-red-400/90 max-w-md">{error}</span>
           </div>
         ) : isTranslating && !translatedText ? (
-          <div className="space-y-3.5 my-2">
+          <div className="space-y-3 my-auto w-full">
             <div className="h-4 skeleton-shimmer rounded-lg w-3/4" />
             <div className="h-4 skeleton-shimmer rounded-lg w-full" />
             <div className="h-4 skeleton-shimmer rounded-lg w-5/6" />
             <div className="h-4 skeleton-shimmer rounded-lg w-2/3" />
           </div>
         ) : translatedText ? (
-          <div className="flex-1 text-slate-100 leading-relaxed whitespace-pre-wrap selection:bg-blue-500/30">
+          <div className="flex-1 text-slate-100 text-sm sm:text-base leading-relaxed whitespace-pre-wrap selection:bg-blue-500/30">
             {translatedText}
           </div>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-center p-6 my-auto">
-            <div className="w-12 h-12 rounded-2xl bg-zinc-900/80 border border-zinc-800 flex items-center justify-center mb-3 text-zinc-500">
+            <div className="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center mb-3 text-slate-500">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
               </svg>
             </div>
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-1">
-              {t("translatedText") || "Translation Output"}
+            <p className="text-sm font-semibold text-slate-300 mb-1.5">
+              {t("emptyStateTitle") || "Bản dịch sẽ xuất hiện ở đây"}
             </p>
-            <p className="text-xs text-zinc-500 max-w-xs">
-              Type or paste text on the left and click Translate (or press <kbd className="px-1 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono text-[10px]">Ctrl+↵</kbd>)
+            <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
+              {t("emptyStateDesc") || "Nhập hoặc dán văn bản phía trên rồi nhấn nút Dịch để bắt đầu."}
             </p>
           </div>
         )}
@@ -193,11 +192,11 @@ export default function ResultPanel({
 
       {/* Bottom Status Info */}
       {translatedText && (
-        <div className="px-4 py-2 border-t border-zinc-800/60 bg-zinc-900/20 flex items-center justify-between text-[11px] font-mono text-zinc-500">
-          <span>{charCount.toLocaleString()} chars</span>
-          <span className="flex items-center gap-1.5 text-emerald-400">
+        <div className="px-4 py-2 border-t border-slate-800/80 bg-slate-900/30 flex items-center justify-between text-[11px] font-mono text-slate-400">
+          <span>{charCount.toLocaleString()} {t("chars") || "ký tự"}</span>
+          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Completed
+            {t("ready") || "Hoàn thành"}
           </span>
         </div>
       )}

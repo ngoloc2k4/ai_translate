@@ -1,23 +1,46 @@
 "use client"
 
-import { useState, createContext, useContext, ReactNode } from "react"
+import { useState, useEffect, createContext, useContext, ReactNode } from "react"
 import { translations, Locale } from "@/lib/i18n/translations"
 
-type TranslationKey = keyof typeof translations.en
+export type TranslationKey = keyof typeof translations.en
 
 interface TranslationContextType {
   locale: Locale
   setLocale: (locale: Locale) => void
-  t: (key: TranslationKey) => string
+  t: (key: string, fallback?: string) => string
 }
 
 const TranslationContext = createContext<TranslationContextType | undefined>(undefined)
 
 export function TranslationProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>("en")
+  const [locale, setLocaleState] = useState<Locale>("vi")
 
-  const t = (key: TranslationKey): string => {
-    return translations[locale][key] || translations.en[key] || key
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ai_translate_locale") as Locale
+      if (saved && (saved === "vi" || saved === "en" || saved === "ko")) {
+        setLocaleState(saved)
+      } else {
+        const navLang = typeof navigator !== "undefined" ? navigator.language : "vi"
+        if (navLang.startsWith("vi")) setLocaleState("vi")
+        else if (navLang.startsWith("ko")) setLocaleState("ko")
+        else setLocaleState("en")
+      }
+    } catch (e) {}
+  }, [])
+
+  const setLocale = (newLocale: Locale) => {
+    setLocaleState(newLocale)
+    try {
+      localStorage.setItem("ai_translate_locale", newLocale)
+    } catch (e) {}
+  }
+
+  const t = (key: string, fallback?: string): string => {
+    const currentDict = (translations as any)[locale] || translations.vi
+    const englishDict = translations.en
+    return currentDict[key] || englishDict[key as keyof typeof englishDict] || fallback || key
   }
 
   return (

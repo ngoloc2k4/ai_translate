@@ -120,7 +120,7 @@ export default function SettingsModal({
                 : "border-transparent text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            API Keys
+            {t("apiKeyTitle") || "Khóa API"}
           </button>
           <button
             type="button"
@@ -131,7 +131,7 @@ export default function SettingsModal({
                 : "border-transparent text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Appearance & Locale
+            {t("language") || "Giao diện & Cỡ chữ"}
           </button>
           <button
             type="button"
@@ -142,7 +142,7 @@ export default function SettingsModal({
                 : "border-transparent text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Custom Endpoints
+            {t("endpoint") || "Tùy chỉnh Endpoint"}
           </button>
         </div>
 
@@ -151,7 +151,7 @@ export default function SettingsModal({
           {activeTab === "keys" && (
             <div className="space-y-4">
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Configure your API keys directly. Keys are securely stored locally in your browser and used for direct translation requests.
+                Cấu hình API Key trực tiếp. Khóa được lưu trữ an toàn ngay trên trình duyệt của bạn.
               </p>
               {keyFields.map((field) => {
                 const isVisible = !!showKey[field.id]

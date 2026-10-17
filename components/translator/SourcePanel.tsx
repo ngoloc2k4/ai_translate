@@ -8,7 +8,7 @@ interface SourcePanelProps {
   onTranslate: () => void
   onStop: () => void
   isTranslating: boolean
-  t: (key: any) => string
+  t: (key: any, fallback?: string) => string
 }
 
 export default function SourcePanel({
@@ -48,56 +48,57 @@ export default function SourcePanel({
         }
       }
     } catch (err) {
-      // Clipboard read may require user interaction / permission
+      // Clipboard read fallback
     }
   }
 
   const charCount = sourceText.length
   const wordCount = sourceText.trim() ? sourceText.trim().split(/\s+/).length : 0
   const isNearLimit = charCount > 4500
+  const hasText = sourceText.trim().length > 0
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col bg-[var(--panel)] border border-[var(--border)] rounded-2xl shadow-sm relative group overflow-hidden focus-within:border-blue-500/50 focus-within:shadow-[0_0_20px_rgba(59,130,246,0.08)] transition-all">
+    <div className="flex-1 min-h-0 flex flex-col bg-[#0f172a] border border-slate-800 rounded-2xl shadow-sm relative group overflow-hidden focus-within:border-blue-500/50 transition-all">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-[var(--border)] bg-zinc-900/40 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-slate-800/80 bg-slate-900/40">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">
-            {t("source")}
+          <span className="text-xs font-bold text-slate-300">
+            {t("source") || "Văn bản gốc"}
           </span>
-          {sourceText.trim() && (
-            <span className="text-[10px] text-zinc-500 font-mono">
-              • {wordCount} {wordCount === 1 ? "word" : "words"}
+          {hasText && (
+            <span className="text-[11px] text-slate-500 font-mono">
+              • {wordCount} {t("words") || "từ"}
             </span>
           )}
         </div>
 
-        {/* Toolbar Buttons */}
-        <div className="flex items-center gap-1">
-          {/* Paste Button */}
+        {/* Quick Toolbar Buttons */}
+        <div className="flex items-center gap-1.5">
+          {/* Paste */}
           <button
             type="button"
             onClick={handlePaste}
-            aria-label="Paste from clipboard"
-            title="Paste from clipboard"
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-colors text-xs font-medium cursor-pointer"
+            aria-label={t("paste") || "Dán"}
+            title="Dán từ bộ nhớ tạm"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 text-xs font-medium transition-colors cursor-pointer"
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
             </svg>
-            <span className="hidden sm:inline text-[10px]">Paste</span>
+            <span className="text-[11px]">{t("paste") || "Dán"}</span>
           </button>
 
-          {/* Text to Speech */}
-          {sourceText && (
+          {/* Speech */}
+          {hasText && (
             <button
               type="button"
               onClick={handleSpeak}
-              aria-label={isSpeaking ? "Stop speaking" : "Speak source text"}
-              title={isSpeaking ? "Stop speaking" : "Speak source text"}
-              className={`p-1.5 rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none cursor-pointer ${
+              aria-label={isSpeaking ? "Dừng đọc" : "Nghe phát âm"}
+              title={isSpeaking ? "Dừng đọc" : "Nghe phát âm"}
+              className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                 isSpeaking 
                   ? "bg-emerald-500/15 text-emerald-400" 
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                  : "text-slate-400 hover:text-white hover:bg-slate-800"
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -106,17 +107,17 @@ export default function SourcePanel({
             </button>
           )}
 
-          {/* Clear Button */}
-          {sourceText && (
+          {/* Clear */}
+          {hasText && (
             <button
               type="button"
               onClick={() => {
                 setSourceText("")
                 textareaRef.current?.focus()
               }}
-              aria-label={t("clear") || "Clear text"}
-              title={t("clear") || "Clear text"}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:outline-none transition-colors cursor-pointer"
+              aria-label={t("clear") || "Xóa"}
+              title="Xóa văn bản"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -127,20 +128,20 @@ export default function SourcePanel({
       </div>
 
       {/* Editor Body */}
-      <div className="flex-1 min-h-0 relative p-4 flex flex-col">
+      <div className="flex-1 min-h-0 relative p-3 sm:p-4 flex flex-col">
         <textarea
           ref={textareaRef}
           value={sourceText}
           onChange={(e) => setSourceText(e.target.value)}
-          placeholder={t("startTyping") || "Enter or paste text to translate..."}
-          aria-label="Source text to translate"
-          className="flex-1 w-full bg-transparent border-none outline-none text-white resize-none scroll-smooth custom-scrollbar leading-relaxed placeholder-zinc-500"
+          placeholder={t("sourcePlaceholder") || "Nhập hoặc dán văn bản cần dịch..."}
+          aria-label="Văn bản cần dịch"
+          className="flex-1 w-full bg-transparent border-none outline-none text-white resize-none scroll-smooth custom-scrollbar leading-relaxed placeholder-slate-500 text-sm sm:text-base font-normal"
         />
 
-        {/* Footer Bar */}
-        <div className="mt-3 pt-2 border-t border-zinc-800/60 flex items-center justify-between">
+        {/* Footer Actions & Counter */}
+        <div className="mt-2 pt-2 border-t border-slate-800/80 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className={`text-[11px] font-mono ${isNearLimit ? "text-amber-400 font-bold" : "text-zinc-500"}`}>
+            <span className={`text-[11px] font-mono ${isNearLimit ? "text-amber-400 font-bold" : "text-slate-500"}`}>
               {charCount.toLocaleString()} / 5,000
             </span>
           </div>
@@ -150,36 +151,40 @@ export default function SourcePanel({
               <button
                 type="button"
                 onClick={onStop}
-                aria-label={t("stop") || "Stop translation"}
+                aria-label={t("stop") || "Dừng"}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-500/15 text-red-400 hover:bg-red-500/25 border border-red-500/30 text-xs font-semibold active:scale-95 transition-all cursor-pointer"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <rect x="6" y="6" width="12" height="12" strokeWidth={2} rx="2" />
                 </svg>
-                <span>{t("stop") || "Stop"}</span>
+                <span>{t("stop") || "Dừng"}</span>
               </button>
             )}
 
+            {/* Prominent Primary Translate Button */}
             <button
               type="button"
               onClick={onTranslate}
-              disabled={!sourceText.trim() || isTranslating}
-              aria-label="Translate text"
-              className="flex items-center gap-2 px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-lg shadow-blue-500/25 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none"
+              disabled={!hasText || isTranslating}
+              aria-label={t("translate") || "Dịch"}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none ${
+                hasText && !isTranslating
+                  ? "bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/30 active:scale-95"
+                  : isTranslating
+                  ? "bg-blue-600/70 text-white cursor-wait"
+                  : "bg-slate-800 text-slate-500 border border-slate-700/60 cursor-not-allowed opacity-60"
+              }`}
             >
               {isTranslating ? (
                 <>
                   <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>{t("translating")}...</span>
+                  <span>{t("translating") || "Đang dịch..."}</span>
                 </>
               ) : (
                 <>
-                  <span>{t("translate")}</span>
-                  <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono bg-blue-700/60 text-blue-200 border border-blue-400/30">
-                    Ctrl+↵
-                  </span>
-                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  <span className="tracking-wide uppercase font-extrabold">{t("translate") || "Dịch"}</span>
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
                 </>
               )}
