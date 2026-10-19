@@ -21,6 +21,7 @@ export function useDynamicModels(provider: string, clientKey: string, hasServerK
 
       setIsFetching(true)
 
+      try {
         const url = `/api/models?provider=${encodeURIComponent(provider)}`
         const headers: Record<string, string> = {}
         if (clientKey) {

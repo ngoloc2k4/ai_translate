@@ -29,12 +29,12 @@ function bufferToHex(buffer: ArrayBuffer): string {
 async function computeHmacSha256(data: string, secret: string): Promise<string> {
   const key = await crypto.subtle.importKey(
     "raw",
-    stringToUint8Array(secret),
+    stringToUint8Array(secret) as BufferSource,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
   )
-  const signature = await crypto.subtle.sign("HMAC", key, stringToUint8Array(data))
+  const signature = await crypto.subtle.sign("HMAC", key, stringToUint8Array(data) as BufferSource)
   return bufferToHex(signature)
 }
 

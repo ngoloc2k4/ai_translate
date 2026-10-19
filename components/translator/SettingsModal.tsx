@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useTranslation } from "@/lib/i18n/useTranslation"
 import { FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_STEP } from "@/lib/constants/providers"
 import { useAppSettings } from "@/store/useAppSettings"
+import type { ApiKeys } from "@/types"
 
 interface SettingsModalProps {
   isOpen: boolean

@@ -40,6 +40,7 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // @ts-ignore: Next 16 type definition compatibility
   eslint: {
     ignoreDuringBuilds: true,
   },
