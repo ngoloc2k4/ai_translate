@@ -19,6 +19,7 @@ export async function translateNvidia({
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        Accept: "text/event-stream, application/json",
       },
       body: JSON.stringify({
         model,
@@ -27,6 +28,7 @@ export async function translateNvidia({
           { role: "user", content: userPrompt },
         ],
         temperature,
+        max_tokens: 4096,
         stream: true,
       }),
       signal: controller.signal,
@@ -36,15 +38,15 @@ export async function translateNvidia({
 
     if (!response.ok) {
       const error = await response.text()
+      let msg = "NVIDIA NIM API error"
       try {
         const json = JSON.parse(error)
-        const msg = json.error?.message || "NVIDIA NIM API error"
-        logAuth('failure', { provider: 'nvidia', reason: msg })
-        throw new Error(msg)
+        msg = json.error?.message || json.message || msg
       } catch {
-        logAuth('failure', { provider: 'nvidia', reason: error })
-        throw new Error(`NVIDIA NIM API error (${response.status}): ${error}`)
+        msg = `NVIDIA NIM API error (${response.status}): ${error.slice(0, 300)}`
       }
+      logAuth('failure', { provider: 'nvidia', reason: msg })
+      throw new Error(msg)
     }
 
     logAuth('success', { provider: 'nvidia', source: 'api_call' })

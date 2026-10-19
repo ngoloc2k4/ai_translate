@@ -133,13 +133,25 @@ export async function POST(req: NextRequest) {
 
             try {
               const parsed = JSON.parse(data)
+
+              // Check if provider sent an in-stream error
+              if (parsed.error) {
+                const errorMsg = parsed.error.message || JSON.stringify(parsed.error)
+                controller.error(new Error(errorMsg))
+                return
+              }
+
               let content = ""
 
-              // Groq/OpenAI/NVIDIA format
+              // Groq/OpenAI/NVIDIA/OpenRouter standard delta
               if (parsed.choices?.[0]?.delta?.content) {
                 content = parsed.choices[0].delta.content
               } 
-              // Gemini format (if channeled through SSE proxy or similar)
+              // OpenRouter / text completions fallback
+              else if (parsed.choices?.[0]?.text) {
+                content = parsed.choices[0].text
+              }
+              // Gemini format (if channeled through SSE proxy)
               else if (parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
                 content = parsed.candidates[0].content.parts[0].text
               }
@@ -149,7 +161,7 @@ export async function POST(req: NextRequest) {
                 controller.enqueue(encoder.encode(content))
               }
             } catch (e) {
-              // Ignore parse errors
+              // Ignore parse errors on individual SSE chunks
             }
           }
         })

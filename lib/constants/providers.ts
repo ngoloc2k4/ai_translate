@@ -18,12 +18,16 @@ export const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
     { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B" },
   ],
   nvidia: [
+    { id: "meta/llama-3.3-70b-instruct", name: "Llama 3.3 70B" },
+    { id: "deepseek-ai/deepseek-r1", name: "DeepSeek R1" },
     { id: "meta/llama-3.1-70b-instruct", name: "Llama 3.1 70B" },
-    { id: "meta/llama-3.1-405b-instruct", name: "Llama 3.1 405B" },
-    { id: "nvidia/nemotron-4-340b-instruct", name: "Nemotron 4 340B" },
+    { id: "meta/llama-3.1-8b-instruct", name: "Llama 3.1 8B" },
+    { id: "nvidia/llama-3.1-nemotron-70b-instruct", name: "Nemotron 70B" },
   ],
   openrouter: [
-    { id: "google/gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+    { id: "google/gemini-2.0-flash-001", name: "Gemini 2.0 Flash" },
+    { id: "deepseek/deepseek-chat", name: "DeepSeek V3" },
+    { id: "meta-llama/llama-3.3-70b-instruct", name: "Llama 3.3 70B" },
     { id: "anthropic/claude-3.5-sonnet", name: "Claude 3.5 Sonnet" },
     { id: "openai/gpt-4o", name: "GPT-4o" },
   ],
@@ -35,8 +39,8 @@ export const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
 export const DEFAULT_SELECTED_MODELS: Record<string, string> = {
   gemini: "gemini-2.5-flash",
   groq: "llama-3.3-70b-versatile",
-  nvidia: "meta/llama-3.1-70b-instruct",
-  openrouter: "google/gemini-2.5-flash",
+  nvidia: "meta/llama-3.3-70b-instruct",
+  openrouter: "google/gemini-2.0-flash-001",
   custom: "custom-model",
 }
 

@@ -30,23 +30,16 @@ export async function validateApiKeyAsync(
       logAuth('invalid_key', { provider, reason: 'invalid_format' })
       return false
     }
-
-    // In development, accept valid format keys
-    if (process.env.NODE_ENV === 'development') {
-      logAuth('success', { provider, source: 'client', env: 'development' })
-      return true
-    }
-
-    // In production, validate with provider
-    logSecurity('Client API key used in production', { provider })
-    return validateWithProvider(provider, clientKey)
+    return true
   }
 
   // Fallback to server-side key
   const serverKey = getServerSideApiKey(provider)
   if (serverKey) {
-    logAuth('success', { provider, source: 'server-side' })
-    return validateWithProvider(provider, serverKey)
+    if (!validateKeyFormat(provider, serverKey)) {
+      return false
+    }
+    return true
   }
 
   logAuth('failure', { provider, reason: 'no_key_provided' })

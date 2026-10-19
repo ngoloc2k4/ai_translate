@@ -99,7 +99,7 @@ export async function validateGroqApiKey(key: string): Promise<boolean> {
  * Validate NVIDIA NIM API key by making a test call to the API
  */
 export async function validateNvidiaApiKey(key: string): Promise<boolean> {
-  if (!key || !key.startsWith('nvapi-')) {
+  if (!key) {
     return false
   }
 
@@ -110,11 +110,10 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
   }
 
   try {
-    const response = await fetch('https://api.nvcf.nvidia.com/v2/nvcf/functions', {
+    const response = await fetch('https://integrate.api.nvidia.com/v1/models', {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
     })
@@ -133,7 +132,7 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
  * Validate OpenRouter API key by making a test call to the API
  */
 export async function validateOpenRouterApiKey(key: string): Promise<boolean> {
-  if (!key || !key.startsWith('sk-or-')) {
+  if (!key) {
     return false
   }
 
@@ -149,7 +148,8 @@ export async function validateOpenRouterApiKey(key: string): Promise<boolean> {
       headers: {
         'Authorization': `Bearer ${key}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://github.com/your-org/ai-translate', // Required by OpenRouter
+        'HTTP-Referer': 'https://ai-translate-lab.vercel.app',
+        'X-Title': 'AI Translate Lab',
       },
     })
 

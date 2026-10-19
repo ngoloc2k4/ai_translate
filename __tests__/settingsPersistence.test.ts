@@ -27,8 +27,8 @@ describe("Settings Persistence & Model Selection", () => {
     expect(state.provider).toBe("gemini")
     expect(state.selectedModels.gemini).toBe("gemini-2.5-flash")
     expect(state.selectedModels.groq).toBe("llama-3.3-70b-versatile")
-    expect(state.selectedModels.nvidia).toBe("meta/llama-3.1-70b-instruct")
-    expect(state.selectedModels.openrouter).toBe("google/gemini-2.5-flash")
+    expect(state.selectedModels.nvidia).toBe("meta/llama-3.3-70b-instruct")
+    expect(state.selectedModels.openrouter).toBe("google/gemini-2.0-flash-001")
   })
 
   it("should update and persist current provider", () => {

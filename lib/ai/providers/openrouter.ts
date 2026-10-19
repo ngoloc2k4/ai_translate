@@ -19,7 +19,7 @@ export async function translateOpenRouter({
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://github.com/ngoloc2k4/ai_translate",
+        "HTTP-Referer": "https://ai-translate-lab.vercel.app",
         "X-Title": "AI Translate Lab",
       },
       body: JSON.stringify({
@@ -41,9 +41,9 @@ export async function translateOpenRouter({
       let msg = "OpenRouter API error"
       try {
         const errorJson = JSON.parse(errorText)
-        msg = errorJson.error?.message || msg
+        msg = errorJson.error?.message || errorJson.message || msg
       } catch {
-        msg = `OpenRouter API error (${response.status}): ${errorText.slice(0, 200)}`
+        msg = `OpenRouter API error (${response.status}): ${errorText.slice(0, 300)}`
       }
       logAuth('failure', { provider: 'openrouter', reason: msg })
       throw new Error(msg)

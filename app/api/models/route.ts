@@ -155,26 +155,44 @@ export async function GET(req: NextRequest) {
       }
       case "nvidia": {
         const res = await fetch(`https://integrate.api.nvidia.com/v1/models`, {
-          headers: { Authorization: `Bearer ${apiKey}` }
+          headers: { 
+            Authorization: `Bearer ${apiKey}`,
+            Accept: "application/json",
+          }
         })
         if (res.status === 401 || res.status === 403) {
           return NextResponse.json({ error: "Invalid NVIDIA API Key" }, { status: 401 })
         }
         if (!res.ok) throw new Error(`NVIDIA API returned ${res.status}`)
         const json = (await res.json()) as OpenAiModelsResponse
-        models = json.data.map(m => ({ id: m.id, name: formatModelName(m.id) }))
+        // Filter out embedding, rerank, clip, audio models
+        models = (json.data || [])
+          .filter(m => {
+            const id = m.id.toLowerCase()
+            return !id.includes("embed") &&
+                   !id.includes("rerank") &&
+                   !id.includes("clip") &&
+                   !id.includes("bge-") &&
+                   !id.includes("audio")
+          })
+          .map(m => ({ id: m.id, name: formatModelName(m.id) }))
         break
       }
       case "openrouter": {
-        const res = await fetch(`https://openrouter.ai/api/v1/models`, {
-          headers: { Authorization: `Bearer ${apiKey}` }
-        })
+        const headers: Record<string, string> = {
+          "HTTP-Referer": "https://ai-translate-lab.vercel.app",
+          "X-Title": "AI Translate Lab",
+        }
+        if (apiKey) {
+          headers["Authorization"] = `Bearer ${apiKey}`
+        }
+        const res = await fetch(`https://openrouter.ai/api/v1/models`, { headers })
         if (res.status === 401 || res.status === 403) {
           return NextResponse.json({ error: "Invalid OpenRouter API Key" }, { status: 401 })
         }
         if (!res.ok) throw new Error(`OpenRouter API returned ${res.status}`)
         const json = (await res.json()) as OpenAiModelsResponse
-        models = json.data.map(m => ({ id: m.id, name: m.name || formatModelName(m.id) }))
+        models = (json.data || []).map(m => ({ id: m.id, name: m.name || formatModelName(m.id) }))
         break
       }
     }
