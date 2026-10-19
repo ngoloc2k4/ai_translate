@@ -2,6 +2,7 @@ import { BASE_TRANSLATOR_PROMPT } from "./promptTemplates"
 import { tonePrompts } from "./tonePrompts"
 import { modePrompts } from "./modePrompts"
 import { outputFormats } from "./outputFormat"
+import { LANGUAGES } from "@/lib/constants/languages"
 
 export interface BuildPromptOptions {
   text: string
@@ -24,9 +25,12 @@ export function buildPrompt({
   const modeInstruction = modePrompts[mode] || modePrompts.default
   const outputInstruction = outputFormats[mode] || outputFormats.default
 
+  const sourceLangName = LANGUAGES.find((l) => l.code === sourceLang)?.name || (sourceLang === "auto" || !sourceLang ? "Auto detect" : sourceLang)
+  const targetLangName = LANGUAGES.find((l) => l.code === targetLang)?.name || targetLang
+
   const userPrompt = `
-Source Language: ${sourceLang === "auto" || !sourceLang ? "Auto detect" : sourceLang}
-Target Language: ${targetLang}
+Source Language: ${sourceLangName}
+Target Language: ${targetLangName}
 
 ${modeInstruction}
 

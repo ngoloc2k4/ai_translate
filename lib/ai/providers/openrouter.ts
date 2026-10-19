@@ -37,8 +37,14 @@ export async function translateOpenRouter({
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      const error = await response.json()
-      const msg = error.error?.message || "OpenRouter API error"
+      const errorText = await response.text()
+      let msg = "OpenRouter API error"
+      try {
+        const errorJson = JSON.parse(errorText)
+        msg = errorJson.error?.message || msg
+      } catch {
+        msg = `OpenRouter API error (${response.status}): ${errorText.slice(0, 200)}`
+      }
       logAuth('failure', { provider: 'openrouter', reason: msg })
       throw new Error(msg)
     }

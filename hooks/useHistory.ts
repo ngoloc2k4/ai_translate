@@ -7,16 +7,16 @@ import type { HistoryItem } from "@/types"
 export function useHistory() {
   const [items, setItems] = useState<HistoryItem[]>([])
 
-  useEffect(() => {
-    loadHistory()
-  }, [])
-
   const loadHistory = useCallback(() => {
     const data = getHistory()
     if (data && data.items) {
       setItems(data.items)
     }
   }, [])
+
+  useEffect(() => {
+    loadHistory()
+  }, [loadHistory])
 
   const clear = useCallback(() => {
     clearHistory()

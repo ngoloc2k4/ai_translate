@@ -7,12 +7,10 @@
 export const MAX_CHARACTERS = 5000
 
 // Regex patterns for input sanitization
-const TRIPLE_DOUBLE_QUOTES = /"""/g
-const TRIPLE_BACKTICKS = /```/g
 const SCRIPT_TAGS = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi
 const JAVASCRIPT_PROTOCOL = /javascript:/gi
 const DATA_URI_HTML = /data:text\/html/gi
-const LANGUAGE_CODE_PATTERN = /[^a-zA-Z0-9_-]/g
+const LANGUAGE_CODE_PATTERN = /[^a-zA-Z0-9_\-\s()]/g
 const MODEL_NAME_PATTERN = /[^a-zA-Z0-9_./-]/g
 
 // Prompt injection detection patterns
@@ -67,7 +65,8 @@ export function sanitizeLanguageCode(code: string): string {
 
   return code
     .replace(LANGUAGE_CODE_PATTERN, '')
-    .slice(0, 10)
+    .trim()
+    .slice(0, 35)
 }
 
 /**

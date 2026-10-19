@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useTranslation as useI18n } from "@/lib/i18n/useTranslation"
 import { useHistory } from "@/hooks/useHistory"
 import { useTranslation } from "@/hooks/useTranslation"
@@ -16,10 +15,9 @@ export default function HistoryPage() {
   const { locale, t } = useI18n()
   const { showToast } = useToast()
   const router = useRouter()
-  const [apiKeys] = useLocalStorage<ApiKeys>("ai_translate_keys", {})
+  const { apiKeys, serverKeys } = useAppSettings()
   const { items: historyItems, clear: clearHistory, deleteItem } = useHistory()
   const { translate, loading, result } = useTranslation()
-  const { serverKeys } = useAppSettings()
   
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null)
   const [editedText, setEditedText] = useState("")
@@ -70,7 +68,7 @@ export default function HistoryPage() {
     if (!selectedItem || !editedText.trim()) return
 
     const provider = selectedItem.provider as keyof ApiKeys
-    const clientKey = (apiKeys as any)?.[provider] as string || ""
+    const clientKey = (apiKeys[provider] as string) || ""
     const hasServerKey = !!(serverKeys && serverKeys[provider])
 
     if (!clientKey && !hasServerKey) {

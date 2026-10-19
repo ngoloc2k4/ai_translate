@@ -26,17 +26,17 @@ describe('API Keys Security', () => {
     expect(validateApiKey('groq', 'wrong_format')).toBe(false)
   })
 
-  it('should use server-side keys when available', () => {
-    process.env.GEMINI_API_KEY = 'test-key'
+  it('should prioritize client-side keys when provided', () => {
+    process.env.GEMINI_API_KEY = 'test-server-key'
 
     const apiKey = getApiKeyToUse('gemini', 'client-key')
-    expect(apiKey).toBe('test-key') // Should use server key
+    expect(apiKey).toBe('client-key') // Client key takes precedence
   })
 
-  it('should fallback to client key when server key is missing', () => {
-    delete process.env.GEMINI_API_KEY
+  it('should use server-side keys when client key is missing', () => {
+    process.env.GEMINI_API_KEY = 'test-server-key'
 
-    const apiKey = getApiKeyToUse('gemini', 'client-key')
-    expect(apiKey).toBe('client-key') // Should fallback to client key
+    const apiKey = getApiKeyToUse('gemini')
+    expect(apiKey).toBe('test-server-key') // Falls back to server key
   })
 })

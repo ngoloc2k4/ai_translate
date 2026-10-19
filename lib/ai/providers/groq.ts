@@ -35,8 +35,14 @@ export async function translateGroq({
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      const error = await response.json()
-      const errorMessage = error.error?.message || "Groq API error"
+      const errorText = await response.text()
+      let errorMessage = "Groq API error"
+      try {
+        const errorJson = JSON.parse(errorText)
+        errorMessage = errorJson.error?.message || errorMessage
+      } catch {
+        errorMessage = `Groq API error (${response.status}): ${errorText.slice(0, 200)}`
+      }
       logAuth('failure', { provider: 'groq', reason: errorMessage })
       throw new Error(errorMessage)
     }

@@ -52,18 +52,22 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
   if (hasServerPassword) {
     if (
       pathname.startsWith("/api/translate") ||
-      pathname.startsWith("/api/models") ||
-      pathname.startsWith("/api/keys")
+      pathname.startsWith("/api/models")
     ) {
       const sessionCookie = request.cookies.get("ai_translate_session")?.value
-      const clientProvidedKey = request.nextUrl.searchParams.get("key") || undefined
+      const clientHeaderKey =
+        request.headers.get("x-api-key") ||
+        request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+        undefined
+      const clientProvidedKey = clientHeaderKey || request.nextUrl.searchParams.get("key") || undefined
 
       // If client provided their own key, no server auth needed
       const hasClientKey = !!clientProvidedKey && clientProvidedKey.trim().length > 0
 
       // If no client key AND session token is invalid, reject request
+      // Note: for /api/translate, the route itself also inspects JSON body client keys
       const isSessionValid = await verifySessionToken(sessionCookie)
-      if (!hasClientKey && !isSessionValid) {
+      if (!hasClientKey && !isSessionValid && !pathname.startsWith("/api/translate")) {
         return new NextResponse(
           JSON.stringify({
             success: false,
@@ -86,14 +90,20 @@ async function handleApiRoute(request: NextRequest, pathname: string) {
     try {
       const { success, limit, reset, remaining } = await ratelimit.limit(`ratelimit_${ip}`)
       if (!success) {
-        return new NextResponse("Rate limited. Too many requests.", {
-          status: 429,
-          headers: {
-            "X-RateLimit-Limit": limit.toString(),
-            "X-RateLimit-Remaining": remaining.toString(),
-            "X-RateLimit-Reset": reset.toString(),
+        return NextResponse.json(
+          {
+            error: "Rate limit exceeded",
+            message: "Too many requests. Please try again later.",
           },
-        })
+          {
+            status: 429,
+            headers: {
+              "X-RateLimit-Limit": limit.toString(),
+              "X-RateLimit-Remaining": remaining.toString(),
+              "X-RateLimit-Reset": reset.toString(),
+            },
+          }
+        )
       }
     } catch (err) {
       console.error("[Proxy] Upstash Rate Limiter Error:", err)

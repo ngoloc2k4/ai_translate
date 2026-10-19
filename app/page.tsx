@@ -4,9 +4,11 @@ import { useEffect } from "react"
 import Link from "next/link"
 import TranslatorPanel from "@/components/TranslatorPanel"
 import { useAppSettings } from "@/store/useAppSettings"
+import { useTranslation } from "@/lib/i18n/useTranslation"
 
 export default function Home() {
   const { setServerKeys } = useAppSettings()
+  const { t } = useTranslation()
 
   useEffect(() => {
     async function fetchServerKeys() {
@@ -47,14 +49,14 @@ export default function Home() {
           {/* History Button (Available on both mobile and desktop) */}
           <Link
             href="/history"
-            aria-label="Lịch sử dịch"
-            title="Lịch sử dịch thuật"
+            aria-label={t("history") || "History"}
+            title={t("history") || "History"}
             className="flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700/60 transition-all cursor-pointer active:scale-95"
           >
             <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span className="hidden sm:inline">Lịch sử</span>
+            <span className="hidden sm:inline">{t("history") || "History"}</span>
           </Link>
 
           {/* Settings Button */}
@@ -64,15 +66,15 @@ export default function Home() {
               const event = new CustomEvent("open-settings")
               window.dispatchEvent(event)
             }}
-            aria-label="Cài đặt"
-            title="Cài đặt cấu hình"
+            aria-label={t("settings") || "Settings"}
+            title={t("settings") || "Settings"}
             className="flex items-center gap-1.5 min-h-[38px] px-3 py-1.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold border border-slate-700/60 transition-all cursor-pointer active:scale-95 focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:outline-none"
           >
             <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <span className="hidden sm:inline">Cài đặt</span>
+            <span className="hidden sm:inline">{t("settings") || "Settings"}</span>
           </button>
         </div>
       </header>

@@ -12,7 +12,7 @@ export interface LogContext {
 }
 
 const LOG_PREFIX = '[AI_TRANSLATE]'
-const SENSITIVE_KEYS = ['apiKey', 'api_keys', 'token', 'secret']
+const SENSITIVE_KEYS = ['apiKey', 'api_key', 'api_keys', 'token', 'secret', 'password', 'authorization', 'cookie']
 const isDevelopment = process.env.NODE_ENV === 'development'
 
 /**
@@ -30,16 +30,16 @@ function sanitizeContext(context: LogContext): LogContext {
  * Log a message with the specified level and context.
  */
 function log(level: LogLevel, message: string, context?: LogContext) {
-  const timestamp = new Date().toISOString()
+  const safeContext = context ? sanitizeContext(context) : undefined
   const prefix = `${LOG_PREFIX} [${level.toUpperCase()}]`
 
   if (isDevelopment) {
-    logDevelopment(level, prefix, message, context)
+    logDevelopment(level, prefix, message, safeContext)
     return
   }
 
   if (level === 'warn' || level === 'error') {
-    logProduction(level, prefix, message, context)
+    logProduction(level, prefix, message, safeContext)
   }
 }
 

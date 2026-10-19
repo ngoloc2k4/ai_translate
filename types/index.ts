@@ -5,11 +5,13 @@ export interface TranslationOptions {
   creativity?: "low" | "default" | "high"
 }
 
+export type ProviderType = "gemini" | "groq" | "nvidia" | "openrouter" | "custom"
+
 export interface TranslationRequest {
   text: string
   sourceLang?: string
   targetLang: string
-  provider: "gemini" | "groq" | "nvidia" | "openrouter" | "custom"
+  provider: ProviderType
   model: string
   apiKey: string
   options?: TranslationOptions
@@ -53,7 +55,7 @@ export interface ApiKeys {
 }
 
 export interface ProviderParams {
-  provider: "gemini" | "groq" | "nvidia" | "openrouter" | "custom"
+  provider: ProviderType
   apiKey: string
   model: string
   systemPrompt: string

@@ -171,7 +171,14 @@ export async function POST(req: NextRequest) {
     })
 
     logAuth('success', { provider, source: clientApiKey ? 'client' : 'server' })
-    return new NextResponse(transformedStream)
+    return new NextResponse(transformedStream, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        "Connection": "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
+    })
 
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : "Translation failed"

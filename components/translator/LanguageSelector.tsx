@@ -31,9 +31,10 @@ function LanguageDropdown({
   onSelect, 
   title,
   align = "left",
-  searchPlaceholder = "Tìm kiếm ngôn ngữ..."
+  searchPlaceholder
 }: DropdownProps) {
   const { locale, t } = useTranslation()
+  const effectivePlaceholder = searchPlaceholder || t("searchLanguage") || "Search language..."
   const [search, setSearch] = useState("")
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -152,8 +153,8 @@ function LanguageDropdown({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder={searchPlaceholder}
-              aria-label={searchPlaceholder}
+              placeholder={effectivePlaceholder}
+              aria-label={effectivePlaceholder}
               className="w-full bg-[#070b14] pl-9 pr-8 py-2 rounded-xl border border-slate-700/80 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
             />
             {search && (
@@ -163,7 +164,7 @@ function LanguageDropdown({
                   setSearch("")
                   inputRef.current?.focus()
                 }}
-                aria-label="Xóa tìm kiếm"
+                aria-label={t("clearText") || "Xóa tìm kiếm"}
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-white"
               >
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +249,7 @@ function LanguageDropdown({
               })
             ) : (
               <div className="p-6 text-center text-xs sm:text-sm text-slate-500">
-                Không tìm thấy ngôn ngữ &quot;{search}&quot;
+                {t("noLanguagesFound") || "Không tìm thấy ngôn ngữ"} &quot;{search}&quot;
               </div>
             )
           ) : (

@@ -21,12 +21,13 @@ export function useDynamicModels(provider: string, clientKey: string, hasServerK
 
       setIsFetching(true)
 
-      try {
-        const url = clientKey
-          ? `/api/models?provider=${provider}&key=${encodeURIComponent(clientKey)}`
-          : `/api/models?provider=${provider}`
+        const url = `/api/models?provider=${encodeURIComponent(provider)}`
+        const headers: Record<string, string> = {}
+        if (clientKey) {
+          headers["x-api-key"] = clientKey
+        }
 
-        const res = await fetch(url)
+        const res = await fetch(url, { headers })
         const json = await res.json()
 
         if (res.ok && isMounted) {

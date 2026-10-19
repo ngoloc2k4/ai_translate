@@ -87,10 +87,81 @@ export async function verifySessionToken(token?: string | null): Promise<boolean
   return timingSafeEqualWeb(signature, expectedSignature)
 }
 
+export const SESSION_COOKIE_NAME = "ai_translate_session"
+export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60 // 30 days
+
+/**
+ * Returns session details including validity and expiration timestamp.
+ */
+export async function getSessionDetails(token?: string | null): Promise<{
+  valid: boolean
+  expiresAt?: number
+  issuedAt?: number
+}> {
+  if (!token || typeof token !== "string") return { valid: false }
+
+  const parts = token.split(".")
+  if (parts.length !== 2) return { valid: false }
+
+  const [timestampStr, signature] = parts
+  const timestamp = parseInt(timestampStr, 10)
+  if (isNaN(timestamp)) return { valid: false }
+
+  const MAX_AGE_MS = SESSION_MAX_AGE_SECONDS * 1000
+  const now = Date.now()
+  if (now - timestamp > MAX_AGE_MS || timestamp > now + 60000) {
+    return { valid: false }
+  }
+
+  const secret = getSigningSecret()
+  const expectedSignature = await computeHmacSha256(timestampStr, secret)
+  const isValid = timingSafeEqualWeb(signature, expectedSignature)
+
+  if (!isValid) return { valid: false }
+
+  return {
+    valid: true,
+    issuedAt: timestamp,
+    expiresAt: timestamp + MAX_AGE_MS,
+  }
+}
+
 /**
  * Constant-time comparison for password checking.
  */
 export function verifyPasswordConstantTime(providedPassword: string, correctPassword?: string): boolean {
   if (!correctPassword || !providedPassword) return false
   return timingSafeEqualWeb(providedPassword, correctPassword)
+}
+
+/**
+ * Verifies credentials (password and optional username).
+ */
+export function verifyCredentials(providedPassword?: string, providedUsername?: string): {
+  success: boolean
+  error?: string
+} {
+  const correctPassword = process.env.APP_PASSWORD
+  const expectedUsername = process.env.APP_USERNAME
+
+  if (!correctPassword) {
+    return { success: false, error: "Server authentication is not configured" }
+  }
+
+  if (!providedPassword) {
+    return { success: false, error: "Password is required" }
+  }
+
+  // If APP_USERNAME is configured, verify username in constant time
+  if (expectedUsername) {
+    if (!providedUsername || !timingSafeEqualWeb(providedUsername, expectedUsername)) {
+      return { success: false, error: "Invalid username or password" }
+    }
+  }
+
+  if (!verifyPasswordConstantTime(providedPassword, correctPassword)) {
+    return { success: false, error: "Invalid username or password" }
+  }
+
+  return { success: true }
 }

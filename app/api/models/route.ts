@@ -82,7 +82,11 @@ export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams
     const provider = searchParams.get("provider")
-    const clientKey = searchParams.get("key") || undefined
+    const clientKey =
+      req.headers.get("x-api-key") ||
+      req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+      searchParams.get("key") ||
+      undefined
 
     if (!provider) {
       return NextResponse.json({ error: "Provider is required" }, { status: 400 })
@@ -116,7 +120,9 @@ export async function GET(req: NextRequest) {
 
     switch (provider) {
       case "gemini": {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`)
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models`, {
+          headers: { "x-goog-api-key": apiKey }
+        })
         if (res.status === 400 || res.status === 401 || res.status === 403) {
           return NextResponse.json({ error: "Invalid Gemini API Key" }, { status: 401 })
         }

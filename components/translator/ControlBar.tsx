@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { PROVIDERS, TONES, MODES } from "@/lib/constants/providers"
-import type { ApiKeys } from "@/types"
+import type { ApiKeys, ProviderType } from "@/types"
 import SearchableSelect from "@/components/ui/SearchableSelect"
 import { useDynamicModels } from "@/hooks/useDynamicModels"
 import { useProviderConfig } from "@/hooks/useProviderConfig"
@@ -11,8 +11,8 @@ import { shouldShowToast } from "@/lib/utils/throttledToast"
 import { useAppSettings } from "@/store/useAppSettings"
 
 interface ControlBarProps {
-  provider: string
-  setProvider: (provider: any) => void
+  provider: ProviderType
+  setProvider: (provider: ProviderType) => void
   model: string
   setModel: (model: string) => void
   tone: string
@@ -22,7 +22,7 @@ interface ControlBarProps {
   temperature: number
   setTemperature: (temp: number) => void
   apiKeys: ApiKeys
-  t: (key: any, fallback?: string) => string
+  t: (key: string, fallback?: string) => string
 }
 
 export default function ControlBar({
@@ -43,7 +43,7 @@ export default function ControlBar({
   const { serverKeys } = useAppSettings()
   const [isExpanded, setIsExpanded] = useState(false)
   
-  const clientKey = (apiKeys as any)?.[provider] || ""
+  const clientKey = (apiKeys[provider as keyof ApiKeys] as string) || ""
   const hasServerKey = !!(serverKeys && serverKeys[provider])
   const hasClientKey = !!clientKey
   
@@ -59,10 +59,14 @@ export default function ControlBar({
   }, [error, showToast])
 
   useEffect(() => {
-    if (allModels.length > 0 && (!model || !allModels.some(m => m.id === model))) {
-      setModel(allModels[0].id)
+    if (allModels.length > 0) {
+      if (!model) {
+        setModel(allModels[0].id)
+      } else if (!isFetchingModels && !allModels.some(m => m.id === model)) {
+        setModel(allModels[0].id)
+      }
     }
-  }, [allModels, model, setModel])
+  }, [allModels, model, setModel, isFetchingModels])
 
   const currentProviderObj = PROVIDERS.find((p) => p.id === provider) || PROVIDERS[0]
   const currentModelObj = allModels.find((m) => m.id === model) || { id: model, name: model || "Default Model" }

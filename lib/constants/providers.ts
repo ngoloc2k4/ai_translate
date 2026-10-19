@@ -32,6 +32,14 @@ export const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
   ],
 }
 
+export const DEFAULT_SELECTED_MODELS: Record<string, string> = {
+  gemini: "gemini-2.5-flash",
+  groq: "llama-3.3-70b-versatile",
+  nvidia: "meta/llama-3.1-70b-instruct",
+  openrouter: "google/gemini-2.5-flash",
+  custom: "custom-model",
+}
+
 
 export const TONES = [
   { id: "default", name: "Default" },
@@ -65,12 +73,6 @@ export const CREATIVITY_OPTIONS = [
   { id: "default", name: "Default", value: 0.5 },
   { id: "high", name: "High", value: 0.8 },
 ] as const
-
-export const TEMPERATURE_PRESETS: Record<string, number> = {
-  precise: 0.1,
-  balanced: 0.5,
-  creative: 0.9,
-}
 
 export const MAX_CHARACTERS = 5000
 

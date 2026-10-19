@@ -15,11 +15,12 @@ export async function translateGemini({
 
   try {
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           contents: [
@@ -39,8 +40,14 @@ export async function translateGemini({
     clearTimeout(timeoutId)
 
     if (!response.ok) {
-      const error = await response.json()
-      const errorMessage = error.error?.message || "Gemini API error"
+      const errorText = await response.text()
+      let errorMessage = "Gemini API error"
+      try {
+        const errorJson = JSON.parse(errorText)
+        errorMessage = errorJson.error?.message || errorMessage
+      } catch {
+        errorMessage = `Gemini API error (${response.status}): ${errorText.slice(0, 200)}`
+      }
       logAuth('failure', { provider: 'gemini', reason: errorMessage })
       throw new Error(errorMessage)
     }

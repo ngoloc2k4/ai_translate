@@ -10,6 +10,22 @@ import { isSafeExternalUrl } from './ssrfGuard'
 
 const keyValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
+const MAX_CACHE_ENTRIES = 500
+
+function setCache(cacheKey: string, valid: boolean) {
+  if (keyValidationCache.size > MAX_CACHE_ENTRIES) {
+    const now = Date.now()
+    for (const [k, v] of keyValidationCache.entries()) {
+      if (now - v.timestamp > CACHE_TTL_MS) {
+        keyValidationCache.delete(k)
+      }
+    }
+    if (keyValidationCache.size > MAX_CACHE_ENTRIES) {
+      keyValidationCache.clear()
+    }
+  }
+  keyValidationCache.set(cacheKey, { valid, timestamp: Date.now() })
+}
 
 /**
  * Validate Gemini API key by making a test call to the API
@@ -28,17 +44,18 @@ export async function validateGeminiApiKey(key: string): Promise<boolean> {
   try {
     // Make a lightweight API call to validate the key
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash?key=${key}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash`,
       {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'x-goog-api-key': key,
         },
       }
     )
 
     const isValid = response.ok || response.status === 404 // 404 means key is valid but model might not exist
-    keyValidationCache.set(`gemini:${key}`, { valid: isValid, timestamp: Date.now() })
+    setCache(`gemini:${key}`, isValid)
     return isValid
   } catch (error) {
     logError('Gemini key validation error', { error })
@@ -70,7 +87,7 @@ export async function validateGroqApiKey(key: string): Promise<boolean> {
     })
 
     const isValid = response.ok
-    keyValidationCache.set(`groq:${key}`, { valid: isValid, timestamp: Date.now() })
+    setCache(`groq:${key}`, isValid)
     return isValid
   } catch (error) {
     logError('Groq key validation error', { error })
@@ -104,7 +121,7 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
 
     // 200 = valid, 401/403 = invalid
     const isValid = response.ok
-    keyValidationCache.set(`nvidia:${key}`, { valid: isValid, timestamp: Date.now() })
+    setCache(`nvidia:${key}`, isValid)
     return isValid
   } catch (error) {
     logError('NVIDIA key validation error', { error })
@@ -137,7 +154,7 @@ export async function validateOpenRouterApiKey(key: string): Promise<boolean> {
     })
 
     const isValid = response.ok
-    keyValidationCache.set(`openrouter:${key}`, { valid: isValid, timestamp: Date.now() })
+    setCache(`openrouter:${key}`, isValid)
     return isValid
   } catch (error) {
     logError('OpenRouter key validation error', { error })

@@ -48,14 +48,21 @@ export function useTranslation() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          ...(params.apiKey ? { "x-api-key": params.apiKey } : {}),
         },
         body: JSON.stringify(params),
         signal: abortControllerRef.current.signal,
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        const errorMessage = errorData.error || "API error"
+        let errorMessage = "API error"
+        try {
+          const errorData = await response.json()
+          errorMessage = errorData.error || errorData.message || errorMessage
+        } catch {
+          const text = await response.text().catch(() => "")
+          errorMessage = text || `Request failed with status ${response.status}`
+        }
         setError(errorMessage)
         logError("Translation API Error", { provider: params.provider, error: errorMessage })
         throw new Error(errorMessage)

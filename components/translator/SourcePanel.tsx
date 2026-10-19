@@ -10,9 +10,7 @@ interface SourcePanelProps {
   onStop: () => void
   isTranslating: boolean
   sourceLang: string
-  autoTranslate?: boolean
-  setAutoTranslate?: (enabled: boolean) => void
-  t: (key: any, fallback?: string) => string
+  t: (key: string, fallback?: string) => string
 }
 
 export default function SourcePanel({
@@ -22,8 +20,6 @@ export default function SourcePanel({
   onStop,
   isTranslating,
   sourceLang,
-  autoTranslate = true,
-  setAutoTranslate,
   t
 }: SourcePanelProps) {
   const [isSpeaking, setIsSpeaking] = useState(false)
@@ -88,24 +84,6 @@ export default function SourcePanel({
 
         {/* Quick Toolbar Buttons */}
         <div className="flex items-center gap-1 sm:gap-1.5">
-          {/* Auto Translate Toggle */}
-          {setAutoTranslate && (
-            <button
-              type="button"
-              onClick={() => setAutoTranslate(!autoTranslate)}
-              aria-label={t("autoTranslateHint") || "Tự động dịch sau 1s"}
-              title={autoTranslate ? "Tự động dịch: ĐANG BẬT (Dịch sau 1s khi ngừng gõ)" : "Tự động dịch: ĐANG TẮT"}
-              className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                autoTranslate
-                  ? "bg-blue-500/15 text-blue-400 border border-blue-500/30 font-semibold"
-                  : "bg-slate-800/60 text-slate-400 hover:text-white"
-              }`}
-            >
-              <span className={`w-1.5 h-1.5 rounded-full ${autoTranslate ? "bg-blue-400 animate-pulse" : "bg-slate-500"}`} />
-              <span className="text-[11px]">{t("autoTranslate") || "Tự động dịch"}</span>
-            </button>
-          )}
-
           {/* Paste */}
           <button
             type="button"

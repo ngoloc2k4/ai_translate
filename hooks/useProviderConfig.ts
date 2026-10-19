@@ -8,7 +8,7 @@ export function useProviderConfig(providerId: string, fetchedModels: SearchableS
 
   return useMemo(() => {
     const currentProvider = PROVIDERS.find((p) => p.id === providerId)
-    const customModels = (apiKeys?.customModels as any)?.[providerId] || []
+    const customModels = apiKeys?.customModels?.[providerId as keyof NonNullable<typeof apiKeys.customModels>] || []
     const safeCustomModels = Array.isArray(customModels) ? customModels : []
 
     // If fetchedModels is empty, use DEFAULT_MODELS for this provider

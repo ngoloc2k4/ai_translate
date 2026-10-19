@@ -151,7 +151,7 @@ export default function SettingsModal({
           {activeTab === "keys" && (
             <div className="space-y-4">
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Cấu hình API Key trực tiếp. Khóa được lưu trữ an toàn ngay trên trình duyệt của bạn.
+                {t("apiKeyDesc") || "Cấu hình API Key trực tiếp. Khóa được lưu trữ an toàn ngay trên trình duyệt của bạn."}
               </p>
               {keyFields.map((field) => {
                 const isVisible = !!showKey[field.id]
@@ -177,7 +177,7 @@ export default function SettingsModal({
                       <input
                         id={`key-${field.id}`}
                         type={isVisible ? "text" : "password"}
-                        value={(apiKeys as any)[field.id] || ""}
+                        value={(apiKeys[field.id as keyof ApiKeys] as string) || ""}
                         onChange={(e) =>
                           setApiKeys({ ...apiKeys, [field.id]: e.target.value })
                         }
@@ -337,7 +337,7 @@ export default function SettingsModal({
                     <input
                       id={`models-${prov}`}
                       type="text"
-                      value={customModelInputs[prov] ?? ((apiKeys.customModels as any)?.[prov] || []).join(", ")}
+                      value={customModelInputs[prov] ?? (apiKeys.customModels?.[prov as keyof NonNullable<typeof apiKeys.customModels>] || []).join(", ")}
                       onChange={(e) => {
                         const rawValue = e.target.value
                         setCustomModelInputs((prev) => ({ ...prev, [prov]: rawValue }))

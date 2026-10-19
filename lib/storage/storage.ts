@@ -1,36 +1,6 @@
-import type { ApiKeys, TranslationHistory, HistoryItem } from "@/types"
+import type { TranslationHistory, HistoryItem } from "@/types"
 
-const KEYS_STORAGE_KEY = "ai_translate_keys"
 const HISTORY_STORAGE_KEY = "ai_translate_history"
-
-export function getApiKeys(): ApiKeys {
-  if (typeof window === "undefined") return {}
-  try {
-    const raw = localStorage.getItem(KEYS_STORAGE_KEY)
-    return raw ? JSON.parse(raw) : {}
-  } catch (err) {
-    console.error("Error reading API keys from localStorage:", err)
-    return {}
-  }
-}
-
-export function saveApiKeys(keys: ApiKeys): void {
-  if (typeof window === "undefined") return
-  try {
-    localStorage.setItem(KEYS_STORAGE_KEY, JSON.stringify(keys))
-  } catch (err) {
-    console.error("Error saving API keys to localStorage:", err)
-  }
-}
-
-export function clearApiKeys(): void {
-  if (typeof window === "undefined") return
-  try {
-    localStorage.removeItem(KEYS_STORAGE_KEY)
-  } catch (err) {
-    console.error("Error clearing API keys from localStorage:", err)
-  }
-}
 
 export function getHistory(): TranslationHistory | null {
   if (typeof window === "undefined") return null

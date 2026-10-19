@@ -23,32 +23,34 @@ export async function validateApiKeyAsync(
   provider: string,
   clientKey?: string
 ): Promise<boolean> {
-  const serverKey = getServerSideApiKey(provider)
+  const hasClientKey = !!clientKey && clientKey.trim().length > 0
 
+  if (hasClientKey) {
+    if (!validateKeyFormat(provider, clientKey)) {
+      logAuth('invalid_key', { provider, reason: 'invalid_format' })
+      return false
+    }
+
+    // In development, accept valid format keys
+    if (process.env.NODE_ENV === 'development') {
+      logAuth('success', { provider, source: 'client', env: 'development' })
+      return true
+    }
+
+    // In production, validate with provider
+    logSecurity('Client API key used in production', { provider })
+    return validateWithProvider(provider, clientKey)
+  }
+
+  // Fallback to server-side key
+  const serverKey = getServerSideApiKey(provider)
   if (serverKey) {
     logAuth('success', { provider, source: 'server-side' })
     return validateWithProvider(provider, serverKey)
   }
 
-  if (!clientKey) {
-    logAuth('failure', { provider, reason: 'no_key_provided' })
-    return false
-  }
-
-  if (!validateKeyFormat(provider, clientKey)) {
-    logAuth('invalid_key', { provider, reason: 'invalid_format' })
-    return false
-  }
-
-  // In development, accept valid format keys
-  if (process.env.NODE_ENV === 'development') {
-    logAuth('success', { provider, source: 'client', env: 'development' })
-    return true
-  }
-
-  // In production, validate with provider
-  logSecurity('Client API key used in production', { provider })
-  return validateWithProvider(provider, clientKey)
+  logAuth('failure', { provider, reason: 'no_key_provided' })
+  return false
 }
 
 /**

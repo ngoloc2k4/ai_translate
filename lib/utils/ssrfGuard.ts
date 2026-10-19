@@ -71,7 +71,12 @@ export function isSafeExternalUrl(urlStr: string): { safe: boolean; error?: stri
 
   const hostname = parsed.hostname.toLowerCase()
 
-  // In production, block localhost and private IPs
+  // In development mode, allow loopback addresses for local LLM engines (e.g., Ollama, LMStudio)
+  if (isDev && (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1')) {
+    return { safe: true }
+  }
+
+  // Block localhost, loopback, and cloud metadata services
   if (BLOCKED_HOSTNAMES.includes(hostname)) {
     return { safe: false, error: 'Access to loopback or metadata service is forbidden.' }
   }

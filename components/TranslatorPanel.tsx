@@ -6,7 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useToast } from "@/components/ui/Toast"
 import { LANGUAGES } from "@/lib/constants/languages"
-import { MAX_CHARACTERS } from "@/lib/constants/providers"
+import { MAX_CHARACTERS, DEFAULT_SELECTED_MODELS } from "@/lib/constants/providers"
 import { useAppSettings } from "@/store/useAppSettings"
 import type { ApiKeys } from "@/types"
 import { shouldShowToast } from "@/lib/utils/throttledToast"
@@ -24,22 +24,36 @@ export default function TranslatorPanel() {
   const { showToast } = useToast()
   const { result, loading, error, latency, setError, translate, reset, stop } = useTranslation()
 
-  const { fontSize, setFontSize, mobileFontSize, setMobileFontSize, apiKeys, setApiKeys, serverKeys, hasHydrated } = useAppSettings()
+  const { 
+    fontSize, 
+    setFontSize, 
+    mobileFontSize, 
+    setMobileFontSize, 
+    apiKeys, 
+    setApiKeys, 
+    serverKeys, 
+    hasHydrated,
+    provider,
+    setProvider,
+    selectedModels,
+    setSelectedModel,
+  } = useAppSettings()
   const [isMobile, setIsMobile] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [savedProvider, setSavedProvider] = useLocalStorage<"gemini" | "groq" | "nvidia" | "openrouter" | "custom">("ai_translate_provider", "gemini")
-  const [savedModel, setSavedModel] = useLocalStorage<string>("ai_translate_model", "gemini-2.5-flash")
 
   const [sourceText, setSourceText] = useState("")
   const [sourceLang, setSourceLang] = useLocalStorage<string>("ai_translate_source_lang", "auto")
   const [targetLang, setTargetLang] = useLocalStorage<string>("ai_translate_target_lang", "en")
-  const [provider, setProvider] = useState<"gemini" | "groq" | "nvidia" | "openrouter" | "custom">(savedProvider)
-  const [model, setModel] = useState(savedModel)
+
+  const model = (selectedModels && selectedModels[provider]) || DEFAULT_SELECTED_MODELS[provider] || ""
+  const handleSetModel = useCallback((newModel: string) => {
+    setSelectedModel(provider, newModel)
+  }, [provider, setSelectedModel])
+
   const [tone, setTone] = useState("default")
   const [mode, setMode] = useState("default")
   const [creativity, setCreativity] = useState<"low" | "default" | "high">("default")
   const [temperature, setTemperature] = useLocalStorage<number>("ai_translate_temperature", 0.7)
-  const [autoTranslate, setAutoTranslate] = useLocalStorage<boolean>("ai_translate_auto_translate", true)
   const [showSettings, setShowSettings] = useState(false)
 
   // Refs for keyboard shortcut & auto-translate handlers
@@ -84,13 +98,6 @@ export default function TranslatorPanel() {
     return () => window.removeEventListener("resize", checkMobile)
   }, [])
 
-  // Sync with local storage
-  useEffect(() => {
-    if (mounted) {
-      setSavedProvider(provider)
-      setSavedModel(model)
-    }
-  }, [provider, model, mounted, setSavedProvider, setSavedModel])
 
   // System-wide font scaling
   useEffect(() => {
@@ -119,7 +126,7 @@ export default function TranslatorPanel() {
     }
 
     const curProvider = providerRef.current
-    const apiKey = (apiKeysRef.current as any)?.[curProvider] as string || ""
+    const apiKey = (apiKeysRef.current[curProvider as keyof ApiKeys] as string) || ""
     const hasServerKey = !!(serverKeysRef.current && serverKeysRef.current[curProvider])
     if (!apiKey && !hasServerKey) {
       setError(t("invalidApiKey"))
@@ -132,7 +139,7 @@ export default function TranslatorPanel() {
     translate({
       text: currentText,
       sourceLang: sourceLangRef.current,
-      targetLang: LANGUAGES.find((l) => l.code === targetLangRef.current)?.name || targetLangRef.current,
+      targetLang: targetLangRef.current,
       provider: curProvider,
       model: modelRef.current,
       apiKey,
@@ -145,26 +152,6 @@ export default function TranslatorPanel() {
       },
     })
   }, [translate, t, showToast, setError])
-
-  // Auto-translate on pause (Debounce ~950ms)
-  useEffect(() => {
-    if (!autoTranslate) return
-    const textToTranslate = sourceText.trim()
-    if (!textToTranslate) {
-      lastTranslatedTextRef.current = ""
-      return
-    }
-    if (textToTranslate === lastTranslatedTextRef.current) return
-    if (loading) return
-
-    const timer = setTimeout(() => {
-      if (sourceText.trim() && sourceText.trim() !== lastTranslatedTextRef.current && !loadingRef.current) {
-        handleTranslate()
-      }
-    }, 950)
-
-    return () => clearTimeout(timer)
-  }, [sourceText, autoTranslate, handleTranslate, loading])
 
   // Keyboard shortcuts - uses refs to avoid frequent re-subscriptions
   useEffect(() => {
@@ -218,11 +205,10 @@ export default function TranslatorPanel() {
           setProvider={(newProvider) => {
             if (newProvider !== provider) {
               setProvider(newProvider)
-              setModel("")
             }
           }}
           model={model}
-          setModel={setModel}
+          setModel={handleSetModel}
           tone={tone}
           setTone={setTone}
           mode={mode}
@@ -242,8 +228,6 @@ export default function TranslatorPanel() {
           onStop={stop}
           isTranslating={loading}
           sourceLang={sourceLang}
-          autoTranslate={autoTranslate}
-          setAutoTranslate={setAutoTranslate}
           t={t}
         />
 

@@ -18,6 +18,7 @@ export const translations = {
     swapLanguages: "Đổi ngôn ngữ",
     swap: "Đổi chiều",
     searchLanguage: "Tìm kiếm ngôn ngữ...",
+    noLanguagesFound: "Không tìm thấy ngôn ngữ",
     allLanguages: "Tất cả ngôn ngữ",
     popularLanguages: "Phổ biến",
     autoTranslate: "Tự động dịch",
@@ -87,6 +88,7 @@ export const translations = {
 
     // Settings
     apiKeyTitle: "Khóa API Nhà cung cấp",
+    apiKeyDesc: "Cấu hình API Key trực tiếp. Khóa được lưu trữ an toàn ngay trên trình duyệt của bạn.",
     geminiApiKey: "Google Gemini API Key",
     groqApiKey: "Groq Cloud API Key",
     fontSize: "Cỡ chữ",
@@ -173,6 +175,7 @@ export const translations = {
     swapLanguages: "Swap languages",
     swap: "Swap",
     searchLanguage: "Search language...",
+    noLanguagesFound: "No languages found for",
     allLanguages: "All Languages",
     popularLanguages: "Popular",
     autoTranslate: "Auto-translate",
@@ -242,6 +245,7 @@ export const translations = {
 
     // Settings
     apiKeyTitle: "Provider API Keys",
+    apiKeyDesc: "Configure API keys directly. Keys are securely stored in your local browser.",
     geminiApiKey: "Google Gemini API Key",
     groqApiKey: "Groq Cloud API Key",
     fontSize: "Font Size",
@@ -328,6 +332,7 @@ export const translations = {
     swapLanguages: "언어 교환",
     swap: "교환",
     searchLanguage: "언어 검색...",
+    noLanguagesFound: "일치하는 언어를 찾을 수 없습니다:",
     allLanguages: "모든 언어",
     popularLanguages: "인기 언어",
     autoTranslate: "자동 번역",
@@ -397,6 +402,7 @@ export const translations = {
 
     // Settings
     apiKeyTitle: "공급자 API 키",
+    apiKeyDesc: "API 키를 직접 설정하세요. 키는 브라우저에 안전하게 저장됩니다.",
     geminiApiKey: "Google Gemini API 키",
     groqApiKey: "Groq Cloud API 키",
     fontSize: "글꼴 크기",

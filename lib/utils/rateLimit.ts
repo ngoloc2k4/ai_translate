@@ -17,6 +17,7 @@ export interface RateLimitResult {
 const LIMITS: Record<string, number> = {
   '/api/translate': 20,
   '/api/validate-key': 5,
+  '/api/auth': 5,
 }
 const DEFAULT_LIMIT = 10
 const WINDOW_MS = 60 * 1000 // 1 minute
@@ -24,6 +25,21 @@ const WINDOW_MS = 60 * 1000 // 1 minute
 // Store for rate limit tracking
 // In production, this should be moved to Redis or a similar persistent store
 const requestCounts = new Map<string, { count: number; resetTime: number }>()
+const MAX_MAP_ENTRIES = 5000
+
+function pruneExpired(now: number) {
+  if (requestCounts.size > MAX_MAP_ENTRIES) {
+    for (const [key, record] of requestCounts.entries()) {
+      if (now > record.resetTime) {
+        requestCounts.delete(key)
+      }
+    }
+    if (requestCounts.size > MAX_MAP_ENTRIES) {
+      const keysToDelete = Array.from(requestCounts.keys()).slice(0, 1000)
+      for (const k of keysToDelete) requestCounts.delete(k)
+    }
+  }
+}
 
 /**
  * Check if a request should be allowed based on rate limits.
@@ -33,6 +49,7 @@ const requestCounts = new Map<string, { count: number; resetTime: number }>()
  */
 export function checkRateLimit(ip: string, path: string): RateLimitResult {
   const now = Date.now()
+  pruneExpired(now)
   const limit = LIMITS[path] || DEFAULT_LIMIT
   const key = `${ip}:${path}`
   const record = requestCounts.get(key)
