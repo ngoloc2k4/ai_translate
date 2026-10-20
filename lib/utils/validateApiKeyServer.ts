@@ -123,8 +123,15 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
       }),
     })
 
-    // 200 = valid, 401/403 = invalid
-    const isValid = response.ok || response.status === 200
+    // 200 = valid, 401/403 = invalid key
+    // 404 with "Not found for account" means key is recognized by gateway but missing public inference permissions
+    let isValid = response.ok || response.status === 200
+    if (!isValid && response.status === 404) {
+      const errText = await response.text()
+      if (errText.includes("Not found for account") || errText.includes("Function")) {
+        isValid = true
+      }
+    }
     setCache(`nvidia:${key}`, isValid)
     return isValid
   } catch (error) {

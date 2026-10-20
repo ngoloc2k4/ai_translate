@@ -9,12 +9,17 @@ export async function translateNvidia({
   systemPrompt,
   userPrompt,
   temperature,
+  baseUrl,
 }: ProviderParams): Promise<ReadableStream> {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS)
 
+  const endpoint = baseUrl
+    ? `${baseUrl.replace(/\/+$/, '')}/chat/completions`
+    : "https://integrate.api.nvidia.com/v1/chat/completions"
+
   try {
-    const response = await fetch("https://integrate.api.nvidia.com/v1/chat/completions", {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -51,6 +56,12 @@ export async function translateNvidia({
       if (!msg) {
         msg = `NVIDIA NIM API error (${response.status}): ${error.slice(0, 300)}`
       }
+
+      // Clarify account entitlement error
+      if (msg.includes("Not found for account") || (msg.includes("Function") && msg.includes("not found"))) {
+        msg += " — Lỗi tài khoản NVIDIA: Key của bạn chưa được cấp quyền 'Public API Endpoints' trên build.nvidia.com. Hãy thử đổi model khác (như Mistral Large 2, Gemma 3) hoặc tạo key mới trực tiếp trên trang model tại https://build.nvidia.com."
+      }
+
       logAuth('failure', { provider: 'nvidia', reason: msg })
       throw new Error(msg)
     }
