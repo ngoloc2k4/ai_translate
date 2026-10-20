@@ -48,7 +48,7 @@ export default function ControlBar({
   const hasClientKey = !!clientKey
   
   const keyToUse = hasClientKey ? clientKey : ""
-  const { models: fetchedModels, isFetching: isFetchingModels, error } = useDynamicModels(provider, keyToUse, hasServerKey)
+  const { models: fetchedModels, isFetching: isFetchingModels, error, refetch } = useDynamicModels(provider, keyToUse, hasServerKey)
 
   const { allModels } = useProviderConfig(provider, fetchedModels)
 
@@ -153,15 +153,40 @@ export default function ControlBar({
 
           {/* Model Selection */}
           <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-              {t("model") || "Mô hình ngôn ngữ"}
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                {t("model") || "Mô hình ngôn ngữ"}
+              </label>
+              <div className="flex items-center gap-1.5">
+                {isFetchingModels ? (
+                  <span className="text-[10px] text-blue-400 font-medium animate-pulse flex items-center gap-1">
+                    <svg className="w-2.5 h-2.5 animate-spin" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    Đang tải...
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => refetch()}
+                    title="Cập nhật danh sách mô hình từ nhà cung cấp"
+                    className="text-[10px] text-zinc-500 hover:text-blue-400 font-mono transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>({allModels.length} models)</span>
+                    <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
             <SearchableSelect
               options={allModels}
               value={model}
               onChange={(val) => setModel(val)}
               placeholder={isFetchingModels ? "Đang tải mô hình..." : "Chọn mô hình..."}
-              searchPlaceholder="Tìm mô hình..."
+              searchPlaceholder={`Tìm kiếm trong ${allModels.length} mô hình...`}
             />
           </div>
 

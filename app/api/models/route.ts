@@ -85,10 +85,20 @@ function formatModelName(id: string): string {
   return isFree ? `${formatted} (Free)` : formatted;
 }
 
+// In-memory cache for dynamic provider models to keep UI ultra-fast and prevent rate-limiting
+interface CachedModels {
+  timestamp: number
+  models: { id: string; name: string }[]
+}
+
+const modelsCache = new Map<string, CachedModels>()
+const CACHE_TTL_MS = 15 * 60 * 1000 // 15 minutes
+
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams
     const provider = searchParams.get("provider")
+    const refresh = searchParams.get("refresh") === "true"
     const clientKey =
       req.headers.get("x-api-key") ||
       req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
@@ -103,93 +113,20 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ data: [] })
     }
 
-    // Check if client provided their own API key
-    const hasClientKey = !!clientKey && clientKey.trim().length > 0
-    
-    // If no client key, check if user is authenticated to use server-side keys
-    if (!hasClientKey) {
-      const isAuthed = await isAuthenticated(req)
-      if (!isAuthed) {
-        // User is not authenticated and didn't provide their own key
-        // Return empty data - frontend will fallback to static lists
-        return NextResponse.json({ data: [], requiresAuth: true })
-      }
+    // Return cached models if available and not requesting explicit refresh
+    const cacheKey = `${provider}:${clientKey ? 'custom' : 'default'}`
+    const cached = modelsCache.get(cacheKey)
+    if (!refresh && cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return NextResponse.json({ data: cached.models, cached: true })
     }
 
     const apiKey = getApiKeyToUse(provider, clientKey)
-    if (!apiKey) {
-      // If no valid API key (neither server nor client), we can't fetch models. 
-      // It's ok, the frontend will fallback to static lists.
-      return NextResponse.json({ data: [] })
-    }
 
-    let models: { id: string, name: string }[] = []
+    let models: { id: string; name: string }[] = []
 
     switch (provider) {
-      case "gemini": {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models`, {
-          headers: { "x-goog-api-key": apiKey }
-        })
-        if (res.status === 400 || res.status === 401 || res.status === 403) {
-          return NextResponse.json({ error: "Invalid Gemini API Key" }, { status: 401 })
-        }
-        if (!res.ok) throw new Error(`Gemini API returned ${res.status}`)
-        const json = (await res.json()) as GeminiModelsResponse
-        models = json.models
-          .filter(m => m.supportedGenerationMethods.includes("generateContent"))
-          .map(m => {
-            const id = m.name.replace("models/", "")
-            return {
-               id,
-               name: m.displayName || id
-            }
-          })
-        break
-      }
-      case "groq": {
-        const res = await fetch(`https://api.groq.com/openai/v1/models`, {
-          headers: { Authorization: `Bearer ${apiKey}` }
-        })
-        if (res.status === 401 || res.status === 403) {
-          return NextResponse.json({ error: "Invalid Groq API Key" }, { status: 401 })
-        }
-        if (!res.ok) throw new Error(`Groq API returned ${res.status}`)
-        const json = (await res.json()) as OpenAiModelsResponse
-        models = json.data
-          .filter(m => !["mixtral-8x7b-32768", "llama2-70b-4096", "gemma-7b-it"].includes(m.id))
-          .map(m => ({ id: m.id, name: formatModelName(m.id) }))
-        break
-      }
-      case "nvidia": {
-        const res = await fetch(`https://integrate.api.nvidia.com/v1/models`, {
-          headers: { 
-            Authorization: `Bearer ${apiKey}`,
-            Accept: "application/json",
-          }
-        })
-        if (res.status === 401 || res.status === 403) {
-          return NextResponse.json({ error: "Invalid NVIDIA API Key" }, { status: 401 })
-        }
-        if (!res.ok) throw new Error(`NVIDIA API returned ${res.status}`)
-        const json = (await res.json()) as OpenAiModelsResponse
-        // Filter out embedding, rerank, clip, audio, and non-chat models
-        models = (json.data || [])
-          .filter(m => {
-            const id = m.id.toLowerCase()
-            return !id.includes("embed") &&
-                   !id.includes("rerank") &&
-                   !id.includes("clip") &&
-                   !id.includes("bge-") &&
-                   !id.includes("audio") &&
-                   !id.includes("reward") &&
-                   !id.includes("parse") &&
-                   !id.includes("video") &&
-                   !id.includes("guard")
-          })
-          .map(m => ({ id: m.id, name: formatModelName(m.id) }))
-        break
-      }
       case "openrouter": {
+        // OpenRouter models endpoint is completely public and lists all available models
         const headers: Record<string, string> = {
           "HTTP-Referer": "https://ai-translate-lab.vercel.app",
           "X-Title": "AI Translate Lab",
@@ -197,19 +134,205 @@ export async function GET(req: NextRequest) {
         if (apiKey) {
           headers["Authorization"] = `Bearer ${apiKey}`
         }
-        const res = await fetch(`https://openrouter.ai/api/v1/models`, { headers })
-        if (res.status === 401 || res.status === 403) {
-          return NextResponse.json({ error: "Invalid OpenRouter API Key" }, { status: 401 })
+
+        const res = await fetch("https://openrouter.ai/api/v1/models", { headers })
+        if (!res.ok) {
+          throw new Error(`OpenRouter models API returned ${res.status}`)
         }
-        if (!res.ok) throw new Error(`OpenRouter API returned ${res.status}`)
+
         const json = (await res.json()) as OpenAiModelsResponse
-        models = (json.data || []).map(m => ({ id: m.id, name: m.name || formatModelName(m.id) }))
+        const rawModels = json.data || []
+
+        // Popular models to highlight right after free models
+        const popularOpenRouter = [
+          "google/gemini-2.0-flash-001",
+          "deepseek/deepseek-chat",
+          "meta-llama/llama-3.3-70b-instruct",
+          "anthropic/claude-3.5-sonnet",
+          "openai/gpt-4o",
+          "qwen/qwen-2.5-72b-instruct",
+          "mistralai/mistral-large-2411",
+        ]
+
+        // Sort: Free models (:free) first, then popular, then alphabetical
+        const sorted = rawModels.slice().sort((a, b) => {
+          const aFree = a.id.endsWith(":free")
+          const bFree = b.id.endsWith(":free")
+
+          // Prioritize free models
+          if (aFree && !bFree) return -1
+          if (!aFree && bFree) return 1
+
+          // Within free models, prioritize minimax/minimax-m3.1-flash:free
+          if (aFree && bFree) {
+            if (a.id.includes("minimax-m3.1-flash")) return -1
+            if (b.id.includes("minimax-m3.1-flash")) return 1
+            return a.id.localeCompare(b.id)
+          }
+
+          // Then popular non-free models
+          const aPop = popularOpenRouter.indexOf(a.id)
+          const bPop = popularOpenRouter.indexOf(b.id)
+          if (aPop !== -1 && bPop === -1) return -1
+          if (aPop === -1 && bPop !== -1) return 1
+          if (aPop !== -1 && bPop !== -1) return aPop - bPop
+
+          // Then alphabetical
+          return a.id.localeCompare(b.id)
+        })
+
+        models = sorted.map((m) => ({
+          id: m.id,
+          name: m.name || formatModelName(m.id),
+        }))
+        break
+      }
+
+      case "nvidia": {
+        // NVIDIA NIM model catalog is completely public on integrate.api.nvidia.com
+        const headers: Record<string, string> = {
+          Accept: "application/json",
+        }
+        if (apiKey) {
+          headers["Authorization"] = `Bearer ${apiKey}`
+        }
+
+        const res = await fetch("https://integrate.api.nvidia.com/v1/models", { headers })
+        if (!res.ok) {
+          throw new Error(`NVIDIA models API returned ${res.status}`)
+        }
+
+        const json = (await res.json()) as OpenAiModelsResponse
+        const rawModels = json.data || []
+
+        // Known EOL or deprecated models on integrate.api.nvidia.com
+        const eolModels = [
+          "meta/llama-3.1-70b-instruct",
+          "meta/llama-3.1-8b-instruct",
+          "meta/llama-3.3-70b-instruct",
+          "deepseek-ai/deepseek-r1",
+        ]
+
+        // Flagship active chat models to place at the top
+        const priorityNvidia = [
+          "nvidia/llama-3.1-nemotron-70b-instruct",
+          "mistralai/mistral-large-2-instruct",
+          "deepseek-ai/deepseek-v4.1-flash",
+          "google/gemma-3-12b-it",
+          "nvidia/riva-translate-4b-instruct-v2",
+          "mistralai/mixtral-8x22b-v0.1",
+          "01-ai/yi-large",
+        ]
+
+        const filtered = rawModels.filter((m) => {
+          if (eolModels.includes(m.id)) return false
+          const id = m.id.toLowerCase()
+          return (
+            !id.includes("embed") &&
+            !id.includes("rerank") &&
+            !id.includes("clip") &&
+            !id.includes("bge-") &&
+            !id.includes("audio") &&
+            !id.includes("reward") &&
+            !id.includes("parse") &&
+            !id.includes("video") &&
+            !id.includes("guard") &&
+            !id.includes("synthetic") &&
+            !id.includes("deplot") &&
+            !id.includes("kosmos")
+          )
+        })
+
+        // Sort priority models first, then alphabetical
+        filtered.sort((a, b) => {
+          const aIndex = priorityNvidia.indexOf(a.id)
+          const bIndex = priorityNvidia.indexOf(b.id)
+          if (aIndex !== -1 && bIndex === -1) return -1
+          if (aIndex === -1 && bIndex !== -1) return 1
+          if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex
+          return a.id.localeCompare(b.id)
+        })
+
+        models = filtered.map((m) => ({
+          id: m.id,
+          name: formatModelName(m.id),
+        }))
+        break
+      }
+
+      case "groq": {
+        if (apiKey) {
+          const res = await fetch("https://api.groq.com/openai/v1/models", {
+            headers: { Authorization: `Bearer ${apiKey}` },
+          })
+          if (res.ok) {
+            const json = (await res.json()) as OpenAiModelsResponse
+            models = (json.data || [])
+              .filter(
+                (m) =>
+                  !m.id.includes("whisper") &&
+                  !m.id.includes("guard") &&
+                  !["mixtral-8x7b-32768", "llama2-70b-4096", "gemma-7b-it"].includes(m.id)
+              )
+              .map((m) => ({ id: m.id, name: formatModelName(m.id) }))
+          }
+        }
+
+        // If no key or fetch failed, provide active Groq model lineup
+        if (models.length === 0) {
+          models = [
+            { id: "llama-3.3-70b-versatile", name: "Llama 3.3 70B Versatile" },
+            { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B Instant" },
+            { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B" },
+            { id: "gemma2-9b-it", name: "Gemma 2 9B" },
+            { id: "deepseek-r1-distill-llama-70b", name: "DeepSeek R1 Distill 70B" },
+            { id: "qwen-qwq-32b", name: "Qwen QwQ 32B" },
+          ]
+        }
+        break
+      }
+
+      case "gemini": {
+        if (apiKey) {
+          const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+            headers: { "x-goog-api-key": apiKey },
+          })
+          if (res.ok) {
+            const json = (await res.json()) as GeminiModelsResponse
+            models = (json.models || [])
+              .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+              .map((m) => {
+                const id = m.name.replace("models/", "")
+                return {
+                  id,
+                  name: m.displayName || id,
+                }
+              })
+          }
+        }
+
+        // If no key or fetch failed, provide active Gemini model lineup
+        if (models.length === 0) {
+          models = [
+            { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+            { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
+            { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
+            { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash" },
+            { id: "gemini-2.0-flash-lite", name: "Gemini 2.0 Flash Lite" },
+            { id: "gemini-1.5-pro", name: "Gemini 1.5 Pro" },
+            { id: "gemini-1.5-flash", name: "Gemini 1.5 Flash" },
+          ]
+        }
         break
       }
     }
 
-    return NextResponse.json({ data: models })
+    // Save to server-side cache if non-empty
+    if (models.length > 0) {
+      modelsCache.set(cacheKey, { timestamp: Date.now(), models })
+    }
 
+    return NextResponse.json({ data: models })
   } catch (error) {
     logError("Error fetching provider models", { error })
     return NextResponse.json(

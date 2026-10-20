@@ -4,7 +4,7 @@ import { useAppSettings } from "@/store/useAppSettings"
 import { SearchableSelectOption } from "@/components/ui/SearchableSelect"
 
 export function useProviderConfig(providerId: string, fetchedModels: SearchableSelectOption[] = []) {
-  const { apiKeys } = useAppSettings()
+  const { apiKeys, selectedModels } = useAppSettings()
 
   return useMemo(() => {
     const currentProvider = PROVIDERS.find((p) => p.id === providerId)
@@ -16,8 +16,16 @@ export function useProviderConfig(providerId: string, fetchedModels: SearchableS
       ? fetchedModels 
       : (DEFAULT_MODELS[providerId] || [])
 
+    // Ensure the currently selected model is present in the list so it is never lost during rehydration or fetching
+    const currentModelId = selectedModels?.[providerId]
+    const extraModels: SearchableSelectOption[] = []
+    if (currentModelId && !baseModels.some(m => m.id === currentModelId)) {
+      extraModels.push({ id: currentModelId, name: currentModelId })
+    }
+
     const rawModels = [
       ...baseModels,
+      ...extraModels,
       ...safeCustomModels.map((m: string) => ({ id: m, name: m }))
     ]
     
@@ -28,5 +36,5 @@ export function useProviderConfig(providerId: string, fetchedModels: SearchableS
       currentProvider,
       allModels
     }
-  }, [providerId, fetchedModels, apiKeys?.customModels])
+  }, [providerId, fetchedModels, apiKeys?.customModels, selectedModels])
 }

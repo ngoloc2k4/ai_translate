@@ -31,11 +31,26 @@ export default function SearchableSelect({
 
   const selectedOption = options.find((o) => o.id === value)
 
-  const filteredOptions = options.filter(
-    (o) =>
-      o.name.toLowerCase().includes(search.toLowerCase()) ||
-      o.id.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredOptions = React.useMemo(() => {
+    if (!search.trim()) return options
+    const s = search.toLowerCase()
+    return options.filter(
+      (o) => o.name.toLowerCase().includes(s) || o.id.toLowerCase().includes(s)
+    )
+  }, [options, search])
+
+  // Limit rendering to 100 items for buttery-smooth mobile UI while preserving searchability over all models
+  const displayedOptions = React.useMemo(() => {
+    if (filteredOptions.length <= 100) return filteredOptions
+    const topSlice = filteredOptions.slice(0, 100)
+    if (value && !topSlice.some((o) => o.id === value)) {
+      const selectedItem = filteredOptions.find((o) => o.id === value)
+      if (selectedItem) {
+        return [selectedItem, ...topSlice.slice(0, 99)]
+      }
+    }
+    return topSlice
+  }, [filteredOptions, value])
 
   useEffect(() => {
     if (isOpen) {
@@ -69,21 +84,21 @@ export default function SearchableSelect({
     } else if (e.key === "ArrowDown") {
       e.preventDefault()
       setHighlightedIndex((prev) => {
-        const next = prev < filteredOptions.length - 1 ? prev + 1 : 0
+        const next = prev < displayedOptions.length - 1 ? prev + 1 : 0
         scrollOptionIntoView(next)
         return next
       })
     } else if (e.key === "ArrowUp") {
       e.preventDefault()
       setHighlightedIndex((prev) => {
-        const next = prev > 0 ? prev - 1 : filteredOptions.length - 1
+        const next = prev > 0 ? prev - 1 : displayedOptions.length - 1
         scrollOptionIntoView(next)
         return next
       })
     } else if (e.key === "Enter") {
       e.preventDefault()
-      if (highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
-        onChange(filteredOptions[highlightedIndex].id)
+      if (highlightedIndex >= 0 && highlightedIndex < displayedOptions.length) {
+        onChange(displayedOptions[highlightedIndex].id)
         setIsOpen(false)
       }
     }
@@ -168,44 +183,51 @@ export default function SearchableSelect({
           </div>
 
           <div ref={listRef} className="flex-1 overflow-y-auto custom-scrollbar p-1.5 space-y-0.5">
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((o, idx) => {
-                const isSelected = value === o.id
-                const isHighlighted = idx === highlightedIndex
+            {displayedOptions.length > 0 ? (
+              <>
+                {displayedOptions.map((o, idx) => {
+                  const isSelected = value === o.id
+                  const isHighlighted = idx === highlightedIndex
 
-                return (
-                  <button
-                    key={o.id}
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    onClick={() => {
-                      onChange(o.id)
-                      setIsOpen(false)
-                    }}
-                    onMouseEnter={() => setHighlightedIndex(idx)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer ${
-                      isSelected
-                        ? "bg-blue-600/15 text-blue-400 font-semibold"
-                        : isHighlighted
-                        ? "bg-zinc-800 text-white"
-                        : "text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
-                    }`}
-                  >
-                    <div className="truncate pr-2">
-                      <div className="truncate">{o.name}</div>
-                      {o.name !== o.id && (
-                        <div className="text-[10px] text-zinc-500 font-mono truncate mt-0.5">{o.id}</div>
+                  return (
+                    <button
+                      key={o.id}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => {
+                        onChange(o.id)
+                        setIsOpen(false)
+                      }}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                        isSelected
+                          ? "bg-blue-600/15 text-blue-400 font-semibold"
+                          : isHighlighted
+                          ? "bg-zinc-800 text-white"
+                          : "text-zinc-300 hover:bg-zinc-800/60 hover:text-white"
+                      }`}
+                    >
+                      <div className="truncate pr-2">
+                        <div className="truncate">{o.name}</div>
+                        {o.name !== o.id && (
+                          <div className="text-[10px] text-zinc-500 font-mono truncate mt-0.5">{o.id}</div>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
                       )}
-                    </div>
-                    {isSelected && (
-                      <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    )}
-                  </button>
-                )
-              })
+                    </button>
+                  )
+                })}
+                {filteredOptions.length > displayedOptions.length && (
+                  <div className="py-2.5 text-center text-[10px] text-zinc-500 font-medium border-t border-zinc-800/80 mt-1">
+                    +{filteredOptions.length - displayedOptions.length} mô hình khác — gõ để tìm kiếm
+                  </div>
+                )}
+              </>
             ) : (
               <div className="px-3 py-6 text-center text-xs text-zinc-500">No models found</div>
             )}
