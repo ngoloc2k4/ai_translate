@@ -110,16 +110,21 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
   }
 
   try {
-    const response = await fetch('https://integrate.api.nvidia.com/v1/models', {
-      method: 'GET',
+    const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,
-        'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        model: 'nvidia/llama-3.1-nemotron-70b-instruct',
+        messages: [{ role: 'user', content: 'hi' }],
+        max_tokens: 1,
+      }),
     })
 
     // 200 = valid, 401/403 = invalid
-    const isValid = response.ok
+    const isValid = response.ok || response.status === 200
     setCache(`nvidia:${key}`, isValid)
     return isValid
   } catch (error) {

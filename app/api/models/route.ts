@@ -52,12 +52,17 @@ interface GeminiModelsResponse {
 function formatModelName(id: string): string {
   const parts = id.split('/');
   let name = parts[parts.length - 1];
+  const isFree = name.endsWith(':free');
+  if (isFree) {
+    name = name.replace(/:free$/, '');
+  }
 
-  return name.split(/[-_]/).map(word => {
+  const formatted = name.split(/[-_]/).map(word => {
     const w = word.toLowerCase();
     if (w === 'llama') return 'Llama';
     if (w === 'gpt') return 'GPT';
     if (w === 'mixtral') return 'Mixtral';
+    if (w === 'mistral') return 'Mistral';
     if (w === 'nemotron') return 'Nemotron';
     if (w === 'instruct') return 'Instruct';
     if (w === 'versatile') return 'Versatile';
@@ -76,6 +81,8 @@ function formatModelName(id: string): string {
     // Capitalize first letter
     return word.charAt(0).toUpperCase() + word.slice(1);
   }).join(' ');
+
+  return isFree ? `${formatted} (Free)` : formatted;
 }
 
 export async function GET(req: NextRequest) {
@@ -165,7 +172,7 @@ export async function GET(req: NextRequest) {
         }
         if (!res.ok) throw new Error(`NVIDIA API returned ${res.status}`)
         const json = (await res.json()) as OpenAiModelsResponse
-        // Filter out embedding, rerank, clip, audio models
+        // Filter out embedding, rerank, clip, audio, and non-chat models
         models = (json.data || [])
           .filter(m => {
             const id = m.id.toLowerCase()
@@ -173,7 +180,11 @@ export async function GET(req: NextRequest) {
                    !id.includes("rerank") &&
                    !id.includes("clip") &&
                    !id.includes("bge-") &&
-                   !id.includes("audio")
+                   !id.includes("audio") &&
+                   !id.includes("reward") &&
+                   !id.includes("parse") &&
+                   !id.includes("video") &&
+                   !id.includes("guard")
           })
           .map(m => ({ id: m.id, name: formatModelName(m.id) }))
         break

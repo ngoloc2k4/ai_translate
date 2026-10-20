@@ -38,11 +38,17 @@ export async function translateOpenRouter({
 
     if (!response.ok) {
       const errorText = await response.text()
-      let msg = "OpenRouter API error"
+      let msg = ""
       try {
         const errorJson = JSON.parse(errorText)
-        msg = errorJson.error?.message || errorJson.message || msg
+        msg = (typeof errorJson.error === 'string' ? errorJson.error : errorJson.error?.message) ||
+              errorJson.message ||
+              errorJson.detail ||
+              ""
       } catch {
+        // Not JSON
+      }
+      if (!msg) {
         msg = `OpenRouter API error (${response.status}): ${errorText.slice(0, 300)}`
       }
       logAuth('failure', { provider: 'openrouter', reason: msg })

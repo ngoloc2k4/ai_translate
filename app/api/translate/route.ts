@@ -135,8 +135,10 @@ export async function POST(req: NextRequest) {
               const parsed = JSON.parse(data)
 
               // Check if provider sent an in-stream error
-              if (parsed.error) {
-                const errorMsg = parsed.error.message || JSON.stringify(parsed.error)
+              if (parsed.error || (parsed.detail && !parsed.choices)) {
+                const errorMsg = (typeof parsed.error === 'string' ? parsed.error : parsed.error?.message) ||
+                                 parsed.detail ||
+                                 JSON.stringify(parsed.error || parsed)
                 controller.error(new Error(errorMsg))
                 return
               }

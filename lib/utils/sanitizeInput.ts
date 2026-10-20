@@ -11,7 +11,7 @@ const SCRIPT_TAGS = /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi
 const JAVASCRIPT_PROTOCOL = /javascript:/gi
 const DATA_URI_HTML = /data:text\/html/gi
 const LANGUAGE_CODE_PATTERN = /[^a-zA-Z0-9_\-\s()]/g
-const MODEL_NAME_PATTERN = /[^a-zA-Z0-9_./-]/g
+const MODEL_NAME_PATTERN = /[^a-zA-Z0-9_./:@+-]/g
 
 // Prompt injection detection patterns
 const PROMPT_INJECTION_PATTERNS = [
@@ -98,7 +98,7 @@ export function sanitizeModel(model: string): string {
 
   return model
     .replace(MODEL_NAME_PATTERN, '')
-    .slice(0, 100)
+    .slice(0, 150)
 }
 
 /**

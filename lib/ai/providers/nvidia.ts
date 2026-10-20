@@ -38,11 +38,17 @@ export async function translateNvidia({
 
     if (!response.ok) {
       const error = await response.text()
-      let msg = "NVIDIA NIM API error"
+      let msg = ""
       try {
         const json = JSON.parse(error)
-        msg = json.error?.message || json.message || msg
+        msg = json.detail ||
+              json.error?.message ||
+              json.message ||
+              (json.title ? `${json.title}: ${json.detail || json.status || ''}`.trim() : "")
       } catch {
+        // Not JSON
+      }
+      if (!msg) {
         msg = `NVIDIA NIM API error (${response.status}): ${error.slice(0, 300)}`
       }
       logAuth('failure', { provider: 'nvidia', reason: msg })
