@@ -76,7 +76,7 @@ export async function translateNvidia({
 
       // Clarify account entitlement error
       if (msg.includes("Not found for account") || (msg.includes("Function") && msg.includes("not found"))) {
-        msg += " — Lỗi tài khoản NVIDIA: Key của bạn chưa được cấp quyền 'Public API Endpoints' trên build.nvidia.com. Hãy thử đổi model khác (như Mistral Large 2, Gemma 3) hoặc tạo key mới trực tiếp trên trang model tại https://build.nvidia.com."
+        msg += " — Lỗi quyền model NVIDIA: Model này chưa được phân bổ cho tài khoản của bạn trên build.nvidia.com. Hãy chuyển sang model chuyên dịch 'Riva Translate 4B v2', 'Nemotron 3.5 Lightning', hoặc 'Mistral Large 2'."
       }
 
       logAuth('failure', { provider: 'nvidia', reason: msg })

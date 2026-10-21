@@ -27,7 +27,7 @@ describe("Settings Persistence & Model Selection", () => {
     expect(state.provider).toBe("gemini")
     expect(state.selectedModels.gemini).toBe("gemini-2.5-flash")
     expect(state.selectedModels.groq).toBe("llama-3.3-70b-versatile")
-    expect(state.selectedModels.nvidia).toBe("nvidia/llama-3.1-nemotron-70b-instruct")
+    expect(state.selectedModels.nvidia).toBe("nvidia/riva-translate-4b-instruct-v2")
     expect(state.selectedModels.openrouter).toBe("google/gemini-2.0-flash-001")
   })
 

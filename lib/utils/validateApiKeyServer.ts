@@ -121,7 +121,7 @@ export async function validateNvidiaApiKey(key: string, endpoint?: string): Prom
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'nvidia/llama-3.1-nemotron-70b-instruct',
+        model: 'nvidia/riva-translate-4b-instruct-v2',
         messages: [{ role: 'user', content: 'hi' }],
         max_tokens: 1,
       }),

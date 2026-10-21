@@ -71,6 +71,11 @@ function formatModelName(id: string): string {
     if (w === 'preview') return 'Preview';
     if (w === 'pro') return 'Pro';
     if (w === 'flash') return 'Flash';
+    if (w === 'qwen') return 'Qwen';
+    if (w === 'coder') return 'Coder';
+    if (w === 'deepseek') return 'DeepSeek';
+    if (w === 'riva') return 'Riva';
+    if (w === 'translate') return 'Translate';
     
     // e.g. 8b, 70b, 405b
     if (/^\d+(\.\d+)?b$/.test(w)) return w.toUpperCase();
@@ -190,7 +195,8 @@ export async function GET(req: NextRequest) {
       }
 
       case "nvidia": {
-        // NVIDIA NIM model catalog is public on integrate.api.nvidia.com or configurable via baseUrlParam
+        // NVIDIA NIM model catalog: fetched from official docs (https://docs.api.nvidia.com/nim/reference/llm-apis)
+        // and merged with live endpoint (integrate.api.nvidia.com/v1/models or custom baseUrl)
         const headers: Record<string, string> = {
           Accept: "application/json",
         }
@@ -198,6 +204,36 @@ export async function GET(req: NextRequest) {
           headers["Authorization"] = `Bearer ${apiKey}`
         }
 
+        // 1. Dynamic fetch from official NVIDIA NIM LLM APIs documentation
+        const docModels: { id: string; name?: string }[] = []
+        try {
+          const docRes = await fetch("https://docs.api.nvidia.com/nim/reference/llm-apis", {
+            headers: { "User-Agent": "Mozilla/5.0" },
+            signal: AbortSignal.timeout(6000),
+          })
+          if (docRes.ok) {
+            const html = await docRes.text()
+            const rows = [...html.matchAll(/<tr>([\s\S]*?)<\/tr>/gi)].map((m) => {
+              const cells = [...m[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map((c) =>
+                c[1].replace(/<[^>]+>/g, "").trim()
+              )
+              return cells
+            }).filter((r) => r.length >= 2)
+
+            for (const r of rows) {
+              const raw = r[0]
+              const [vendor, ...rest] = raw.split("/").map((s) => s.trim())
+              if (vendor && rest.length > 0) {
+                const id = `${vendor}/${rest.join("/")}`
+                docModels.push({ id, name: formatModelName(id) })
+              }
+            }
+          }
+        } catch (docErr) {
+          logError("Failed to fetch NVIDIA docs models", { error: docErr })
+        }
+
+        // 2. Fetch live models from endpoint
         let nvidiaModelsUrl = "https://integrate.api.nvidia.com/v1/models"
         if (baseUrlParam) {
           let cleanBase = baseUrlParam.trim().replace(/\/+$/, "")
@@ -210,58 +246,126 @@ export async function GET(req: NextRequest) {
           nvidiaModelsUrl = `${cleanBase}/models`
         }
 
-        let rawModels: { id: string; name?: string }[] = []
+        const endpointModels: { id: string; name?: string }[] = []
         try {
-          const res = await fetch(nvidiaModelsUrl, { headers })
+          const res = await fetch(nvidiaModelsUrl, { headers, signal: AbortSignal.timeout(6000) })
           if (res.ok) {
             const json = (await res.json()) as OpenAiModelsResponse
-            rawModels = json.data || []
+            endpointModels.push(...(json.data || []))
           } else if (baseUrlParam) {
             // Fall back to default nvidia models url if custom endpoint fails
-            const fallbackRes = await fetch("https://integrate.api.nvidia.com/v1/models", { headers })
+            const fallbackRes = await fetch("https://integrate.api.nvidia.com/v1/models", { headers, signal: AbortSignal.timeout(6000) })
             if (fallbackRes.ok) {
               const json = (await fallbackRes.json()) as OpenAiModelsResponse
-              rawModels = json.data || []
+              endpointModels.push(...(json.data || []))
             }
           }
         } catch (fetchErr) {
           logError("NVIDIA models fetch failed", { error: fetchErr })
         }
 
-        // Fallback lineup if models cannot be retrieved
-        if (rawModels.length === 0) {
-          rawModels = [
-            { id: "nvidia/llama-3.1-nemotron-70b-instruct" },
-            { id: "mistralai/mistral-large-2-instruct" },
-            { id: "deepseek-ai/deepseek-v4.1-flash" },
-            { id: "google/gemma-3-12b-it" },
-            { id: "nvidia/riva-translate-4b-instruct-v2" },
-            { id: "mistralai/mixtral-8x22b-v0.1" },
-            { id: "01-ai/yi-large" },
-          ]
-        }
-
-        // Known EOL or deprecated models on integrate.api.nvidia.com
-        const eolModels = [
-          "meta/llama-3.1-70b-instruct",
-          "meta/llama-3.1-8b-instruct",
-          "meta/llama-3.3-70b-instruct",
-          "deepseek-ai/deepseek-r1",
+        // 3. Static full catalog from official docs (https://docs.api.nvidia.com/nim/reference/llm-apis)
+        const staticDocCatalog: { id: string; name?: string }[] = [
+          // Flagship Translation & Chat Models
+          { id: "nvidia/riva-translate-4b-instruct-v2", name: "Riva Translate 4B v2 (Chuyên Dịch Thuật)" },
+          { id: "nvidia/nemotron-3.5-lightning-30b-a3b", name: "Nemotron 3.5 Lightning 30B" },
+          { id: "nvidia/llama-3.1-nemotron-70b-instruct", name: "Llama 3.1 Nemotron 70B Instruct" },
+          { id: "nvidia/llama-3.1-nemotron-ultra-253b-v1", name: "Llama 3.1 Nemotron Ultra 253B" },
+          { id: "nvidia/llama-3.3-nemotron-super-49b-v1.5", name: "Llama 3.3 Nemotron Super 49B v1.5" },
+          { id: "nvidia/llama-3.3-nemotron-super-49b-v1", name: "Llama 3.3 Nemotron Super 49B v1" },
+          { id: "nvidia/nemotron-3-super-120b-a12b", name: "Nemotron 3 Super 120B" },
+          { id: "nvidia/nemotron-3-ultra-550b-a55b", name: "Nemotron 3 Ultra 550B" },
+          { id: "nvidia/nemotron-3-nano-30b-a3b", name: "Nemotron 3 Nano 30B" },
+          { id: "nvidia/nvidia-nemotron-nano-9b-v2", name: "Nemotron Nano 9B v2" },
+          // Meta Llama Series
+          { id: "meta/llama-3.3-70b-instruct", name: "Meta Llama 3.3 70B Instruct" },
+          { id: "meta/llama-3.1-70b-instruct", name: "Meta Llama 3.1 70B Instruct" },
+          { id: "meta/llama-3.1-8b-instruct", name: "Meta Llama 3.1 8B Instruct" },
+          { id: "meta/llama-3.2-3b-instruct", name: "Meta Llama 3.2 3B Instruct" },
+          { id: "meta/llama-3.2-1b-instruct", name: "Meta Llama 3.2 1B Instruct" },
+          { id: "meta/llama2-70b", name: "Meta Llama 2 70B" },
+          // DeepSeek Series
+          { id: "deepseek-ai/deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash" },
+          { id: "deepseek-ai/deepseek-v4-flash", name: "DeepSeek V4 Flash" },
+          { id: "deepseek-ai/deepseek-v4-flash-0731", name: "DeepSeek V4 Flash 0731" },
+          { id: "deepseek-ai/deepseek-v4-pro", name: "DeepSeek V4 Pro" },
+          // Mistral Series
+          { id: "mistralai/mistral-large-2-instruct", name: "Mistral Large 2 Instruct" },
+          { id: "mistralai/mixtral-8x22b-instruct", name: "Mixtral 8x22B Instruct" },
+          { id: "mistralai/mixtral-8x7b-instruct", name: "Mixtral 8x7B Instruct" },
+          { id: "mistralai/mistral-nemotron", name: "Mistral Nemotron" },
+          // Qwen Series
+          { id: "qwen/qwen2.5-coder-32b-instruct", name: "Qwen 2.5 Coder 32B Instruct" },
+          { id: "qwen/qwen3-next-80b-a3b-instruct", name: "Qwen 3 Next 80B Instruct" },
+          { id: "qwen/qwen3-next-80b-a3b-thinking", name: "Qwen 3 Next 80B Thinking" },
+          { id: "qwen/qwq-32b", name: "Qwen QwQ 32B" },
+          // Google Series
+          { id: "google/gemma-3-12b-it", name: "Google Gemma 3 12B IT" },
+          { id: "google/gemma-3-4b-it", name: "Google Gemma 3 4B IT" },
+          { id: "google/gemma-4-31b-it", name: "Google Gemma 4 31B IT" },
+          { id: "google/gemma-7b", name: "Google Gemma 7B" },
+          { id: "google/codegemma-7b", name: "Google CodeGemma 7B" },
+          // Microsoft Series
+          { id: "microsoft/phi-4-mini-instruct", name: "Microsoft Phi 4 Mini Instruct" },
+          { id: "microsoft/phi-4-mini-flash-reasoning", name: "Microsoft Phi 4 Mini Flash Reasoning" },
+          // OpenAI Series
+          { id: "openai/gpt-oss-120b", name: "OpenAI GPT OSS 120B" },
+          { id: "openai/gpt-oss-20b", name: "OpenAI GPT OSS 20B" },
+          // Partner LLMs
+          { id: "01-ai/yi-large", name: "01.AI Yi Large" },
+          { id: "z-ai/glm-5.3", name: "Z-AI GLM 5.3" },
+          { id: "z-ai/glm-5.3-flash", name: "Z-AI GLM 5.3 Flash" },
+          { id: "z-ai/glm-5.2", name: "Z-AI GLM 5.2" },
+          { id: "z-ai/glm5.1", name: "Z-AI GLM 5.1" },
+          { id: "z-ai/glm4.7", name: "Z-AI GLM 4.7" },
+          { id: "moonshotai/kimi-k3", name: "Moonshot Kimi K3" },
+          { id: "moonshotai/kimi-k2-instruct", name: "Moonshot Kimi K2 Instruct" },
+          { id: "moonshotai/kimi-k2-thinking", name: "Moonshot Kimi K2 Thinking" },
+          { id: "stepfun-ai/step-3.5-flash", name: "StepFun Step 3.5 Flash" },
+          { id: "upstage/solar-10.7b-instruct", name: "Upstage Solar 10.7B Instruct" },
+          { id: "minimaxai/minimax-m2.7", name: "MiniMax M2.7" },
+          { id: "minimaxai/minimax-m2.5", name: "MiniMax M2.5" },
+          { id: "sarvamai/sarvam-m", name: "Sarvam AI Sarvam M" },
+          { id: "stockmark/stockmark-2-100b-instruct", name: "Stockmark 2 100B Instruct" },
+          { id: "poolside/laguna-xs-2-1", name: "Poolside Laguna XS 2.1" },
+          { id: "thinking machines/inkling", name: "Thinking Machines Inkling" },
         ]
 
-        // Flagship active chat models to place at the top
+        // 4. Merge all sources by ID
+        const mergedMap = new Map<string, { id: string; name?: string }>()
+        for (const m of staticDocCatalog) {
+          mergedMap.set(m.id, m)
+        }
+        for (const m of docModels) {
+          mergedMap.set(m.id, m)
+        }
+        for (const m of endpointModels) {
+          if (!mergedMap.has(m.id)) {
+            mergedMap.set(m.id, m)
+          }
+        }
+
+        const rawModels = Array.from(mergedMap.values())
+
+        // Priority models placed at the top of the dropdown
         const priorityNvidia = [
-          "nvidia/llama-3.1-nemotron-70b-instruct",
-          "mistralai/mistral-large-2-instruct",
-          "deepseek-ai/deepseek-v4.1-flash",
-          "google/gemma-3-12b-it",
           "nvidia/riva-translate-4b-instruct-v2",
-          "mistralai/mixtral-8x22b-v0.1",
+          "nvidia/nemotron-3.5-lightning-30b-a3b",
+          "meta/llama-3.3-70b-instruct",
+          "deepseek-ai/deepseek-v4.1-flash",
+          "deepseek-ai/deepseek-v4-flash",
+          "mistralai/mistral-large-2-instruct",
+          "qwen/qwen2.5-coder-32b-instruct",
+          "google/gemma-3-12b-it",
+          "meta/llama-3.1-70b-instruct",
+          "meta/llama-3.1-8b-instruct",
           "01-ai/yi-large",
+          "openai/gpt-oss-20b",
+          "z-ai/glm-5.3",
+          "nvidia/llama-3.1-nemotron-70b-instruct",
         ]
 
         const filtered = rawModels.filter((m) => {
-          if (eolModels.includes(m.id)) return false
           const id = m.id.toLowerCase()
           return (
             !id.includes("embed") &&
@@ -289,10 +393,16 @@ export async function GET(req: NextRequest) {
           return a.id.localeCompare(b.id)
         })
 
-        models = filtered.map((m) => ({
-          id: m.id,
-          name: formatModelName(m.id),
-        }))
+        models = filtered.map((m) => {
+          let name = m.name || formatModelName(m.id)
+          if (m.id === "nvidia/riva-translate-4b-instruct-v2") {
+            name = "Riva Translate 4B v2 (Chuyên Dịch Thuật)"
+          }
+          return {
+            id: m.id,
+            name,
+          }
+        })
         break
       }
 

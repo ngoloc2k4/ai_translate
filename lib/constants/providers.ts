@@ -18,11 +18,16 @@ export const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
     { id: "mixtral-8x7b-32768", name: "Mixtral 8x7B" },
   ],
   nvidia: [
-    { id: "nvidia/llama-3.1-nemotron-70b-instruct", name: "Nemotron 70B" },
-    { id: "mistralai/mistral-large-2-instruct", name: "Mistral Large 2" },
+    { id: "nvidia/riva-translate-4b-instruct-v2", name: "Riva Translate 4B v2 (Chuyên Dịch)" },
+    { id: "nvidia/nemotron-3.5-lightning-30b-a3b", name: "Nemotron 3.5 Lightning 30B" },
+    { id: "meta/llama-3.3-70b-instruct", name: "Llama 3.3 70B Instruct" },
     { id: "deepseek-ai/deepseek-v4.1-flash", name: "DeepSeek V4.1 Flash" },
+    { id: "mistralai/mistral-large-2-instruct", name: "Mistral Large 2" },
+    { id: "qwen/qwen2.5-coder-32b-instruct", name: "Qwen 2.5 Coder 32B" },
     { id: "google/gemma-3-12b-it", name: "Gemma 3 12B" },
-    { id: "nvidia/riva-translate-4b-instruct-v2", name: "Riva Translate 4B" },
+    { id: "01-ai/yi-large", name: "Yi Large" },
+    { id: "openai/gpt-oss-20b", name: "GPT OSS 20B" },
+    { id: "z-ai/glm-5.3", name: "GLM 5.3" },
   ],
   openrouter: [
     { id: "google/gemini-2.0-flash-001", name: "Gemini 2.0 Flash" },
@@ -40,7 +45,7 @@ export const DEFAULT_MODELS: Record<string, { id: string; name: string }[]> = {
 export const DEFAULT_SELECTED_MODELS: Record<string, string> = {
   gemini: "gemini-2.5-flash",
   groq: "llama-3.3-70b-versatile",
-  nvidia: "nvidia/llama-3.1-nemotron-70b-instruct",
+  nvidia: "nvidia/riva-translate-4b-instruct-v2",
   openrouter: "google/gemini-2.0-flash-001",
   custom: "custom-model",
 }

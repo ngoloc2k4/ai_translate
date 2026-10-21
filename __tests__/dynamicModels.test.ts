@@ -52,13 +52,13 @@ describe("Dynamic Models API (/api/models)", () => {
     expect(Array.isArray(json.data)).toBe(true)
     expect(json.data.length).toBeGreaterThan(10)
 
-    // Flagship model should be present
-    const hasNemotron = json.data.some((m: { id: string }) => m.id.includes("nemotron-70b"))
-    expect(hasNemotron).toBe(true)
+    // Translation flagship model should be present
+    const hasRivaTranslate = json.data.some((m: { id: string }) => m.id.includes("riva-translate"))
+    expect(hasRivaTranslate).toBe(true)
 
-    // EOL models should be filtered out
-    const hasLlama33Eol = json.data.some((m: { id: string }) => m.id === "meta/llama-3.3-70b-instruct")
-    expect(hasLlama33Eol).toBe(false)
+    // Official docs models from docs.api.nvidia.com like meta/llama-3.3-70b-instruct should be present
+    const hasLlama33 = json.data.some((m: { id: string }) => m.id === "meta/llama-3.3-70b-instruct")
+    expect(hasLlama33).toBe(true)
   })
 
   it("should return cached models on subsequent calls for high performance", async () => {
