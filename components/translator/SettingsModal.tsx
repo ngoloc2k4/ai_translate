@@ -203,6 +203,39 @@ export default function SettingsModal({
                         )}
                       </button>
                     </div>
+                    {field.id === "nvidia" && (
+                      <div className="mt-3 pt-2.5 border-t border-zinc-800/80">
+                        <div className="flex items-center justify-between mb-1">
+                          <label htmlFor="nvidia-endpoint" className="text-[11px] font-semibold text-zinc-400">
+                            NVIDIA NIM Base URL / Endpoint (Tùy chọn)
+                          </label>
+                          <a
+                            href="https://docs.api.nvidia.com/nim/reference/llm-apis"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-[10px] text-blue-400 hover:underline flex items-center gap-1"
+                          >
+                            <span>NVIDIA LLM API Docs</span>
+                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </a>
+                        </div>
+                        <input
+                          id="nvidia-endpoint"
+                          type="url"
+                          value={apiKeys.nvidiaEndpoint || ""}
+                          onChange={(e) =>
+                            setApiKeys({ ...apiKeys, nvidiaEndpoint: e.target.value })
+                          }
+                          placeholder="https://integrate.api.nvidia.com (Default: POST /v1/chat/completions)"
+                          className="w-full px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--background)] text-xs text-white placeholder-zinc-600 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none font-mono"
+                        />
+                        <p className="text-[10px] text-zinc-500 mt-1">
+                          Mặc định: <code className="text-zinc-400">https://integrate.api.nvidia.com/v1/chat/completions</code>. Hỗ trợ NIM private host hoặc proxy.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )
               })}

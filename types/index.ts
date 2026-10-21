@@ -46,6 +46,7 @@ export interface ApiKeys {
   openrouter?: string
   custom?: string
   customEndpoint?: string
+  nvidiaEndpoint?: string
   customModels?: {
     groq?: string[]
     nvidia?: string[]

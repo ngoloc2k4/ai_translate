@@ -6,6 +6,7 @@ interface ApiKeysInput {
   gemini?: string
   groq?: string
   nvidia?: string
+  nvidiaEndpoint?: string
   openrouter?: string
   custom?: string
   customEndpoint?: string
@@ -21,6 +22,7 @@ function validateApiKeysInput(body: any): { success: boolean; data?: ApiKeysInpu
       gemini: typeof body.gemini === "string" ? body.gemini : undefined,
       groq: typeof body.groq === "string" ? body.groq : undefined,
       nvidia: typeof body.nvidia === "string" ? body.nvidia : undefined,
+      nvidiaEndpoint: typeof body.nvidiaEndpoint === "string" ? body.nvidiaEndpoint : undefined,
       openrouter: typeof body.openrouter === "string" ? body.openrouter : undefined,
       custom: typeof body.custom === "string" ? body.custom : undefined,
       customEndpoint: typeof body.customEndpoint === "string" ? body.customEndpoint : undefined,

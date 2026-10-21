@@ -1,6 +1,29 @@
 import { describe, it, expect } from "bun:test"
 import { GET } from "../app/api/models/route"
 import { NextRequest } from "next/server"
+import { resolveNvidiaEndpoint } from "../lib/ai/providers/nvidia"
+
+describe("NVIDIA Endpoint Resolver (resolveNvidiaEndpoint)", () => {
+  it("should return default endpoint when url is undefined or empty", () => {
+    expect(resolveNvidiaEndpoint()).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("   ")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+  })
+
+  it("should normalize base url to /v1/chat/completions", () => {
+    expect(resolveNvidiaEndpoint("https://integrate.api.nvidia.com")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("https://integrate.api.nvidia.com/")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("https://integrate.api.nvidia.com/v1")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("https://integrate.api.nvidia.com/v1/")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("https://integrate.api.nvidia.com/v1/chat/completions")).toBe("https://integrate.api.nvidia.com/v1/chat/completions")
+  })
+
+  it("should support private custom NIM clusters or proxies", () => {
+    expect(resolveNvidiaEndpoint("http://localhost:8000")).toBe("http://localhost:8000/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("http://localhost:8000/v1")).toBe("http://localhost:8000/v1/chat/completions")
+    expect(resolveNvidiaEndpoint("http://my-nim.internal:8000/v1/chat/completions")).toBe("http://my-nim.internal:8000/v1/chat/completions")
+  })
+})
 
 describe("Dynamic Models API (/api/models)", () => {
   it("should fetch dynamic models for openrouter publicly without api key", async () => {

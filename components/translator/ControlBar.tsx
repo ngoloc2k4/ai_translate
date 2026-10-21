@@ -48,7 +48,8 @@ export default function ControlBar({
   const hasClientKey = !!clientKey
   
   const keyToUse = hasClientKey ? clientKey : ""
-  const { models: fetchedModels, isFetching: isFetchingModels, error, refetch } = useDynamicModels(provider, keyToUse, hasServerKey)
+  const baseUrlToUse = provider === "custom" ? apiKeys.customEndpoint : (provider === "nvidia" ? apiKeys.nvidiaEndpoint : undefined)
+  const { models: fetchedModels, isFetching: isFetchingModels, error, refetch } = useDynamicModels(provider, keyToUse, hasServerKey, baseUrlToUse)
 
   const { allModels } = useProviderConfig(provider, fetchedModels)
 

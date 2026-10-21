@@ -143,7 +143,9 @@ export default function TranslatorPanel() {
       provider: curProvider,
       model: modelRef.current,
       apiKey,
-      baseUrl: curProvider === "custom" ? apiKeysRef.current.customEndpoint : undefined,
+      baseUrl: curProvider === "custom" 
+        ? apiKeysRef.current.customEndpoint 
+        : (curProvider === "nvidia" ? apiKeysRef.current.nvidiaEndpoint : undefined),
       options: {
         tone: toneRef.current,
         mode: modeRef.current,

@@ -86,7 +86,9 @@ export default function HistoryPage() {
       provider: selectedItem.provider as any,
       model: selectedItem.model || "gemini-2.5-flash",
       apiKey,
-      baseUrl: selectedItem.provider === "custom" ? apiKeys?.customEndpoint : undefined,
+      baseUrl: selectedItem.provider === "custom" 
+        ? apiKeys?.customEndpoint 
+        : (selectedItem.provider === "nvidia" ? apiKeys?.nvidiaEndpoint : undefined),
       options: {
         mode: selectedItem.mode || "default",
         tone: selectedItem.tone || "default",

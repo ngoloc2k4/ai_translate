@@ -3,6 +3,24 @@ import type { ProviderParams } from "@/types"
 
 const PROVIDER_TIMEOUT_MS = 30_000
 
+/**
+ * Resolves full chat completions endpoint according to NVIDIA NIM documentation
+ * (Base URL: https://integrate.api.nvidia.com, Endpoint: POST /v1/chat/completions)
+ */
+export function resolveNvidiaEndpoint(url?: string): string {
+  if (!url || !url.trim()) {
+    return "https://integrate.api.nvidia.com/v1/chat/completions"
+  }
+  const trimmed = url.trim().replace(/\/+$/, '')
+  if (trimmed.endsWith('/chat/completions')) {
+    return trimmed
+  }
+  if (trimmed.endsWith('/v1')) {
+    return `${trimmed}/chat/completions`
+  }
+  return `${trimmed}/v1/chat/completions`
+}
+
 export async function translateNvidia({
   apiKey,
   model,
@@ -14,15 +32,14 @@ export async function translateNvidia({
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), PROVIDER_TIMEOUT_MS)
 
-  const endpoint = baseUrl
-    ? `${baseUrl.replace(/\/+$/, '')}/chat/completions`
-    : "https://integrate.api.nvidia.com/v1/chat/completions"
+  const endpoint = resolveNvidiaEndpoint(baseUrl)
+  const cleanKey = (apiKey || "").trim()
 
   try {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${cleanKey}`,
         "Content-Type": "application/json",
         Accept: "text/event-stream, application/json",
       },

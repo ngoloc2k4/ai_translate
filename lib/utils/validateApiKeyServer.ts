@@ -7,6 +7,7 @@
 
 import { logError } from './logger'
 import { isSafeExternalUrl } from './ssrfGuard'
+import { resolveNvidiaEndpoint } from '@/lib/ai/providers/nvidia'
 
 const keyValidationCache = new Map<string, { valid: boolean; timestamp: number }>()
 const CACHE_TTL_MS = 5 * 60 * 1000 // 5 minutes
@@ -98,22 +99,25 @@ export async function validateGroqApiKey(key: string): Promise<boolean> {
 /**
  * Validate NVIDIA NIM API key by making a test call to the API
  */
-export async function validateNvidiaApiKey(key: string): Promise<boolean> {
-  if (!key) {
+export async function validateNvidiaApiKey(key: string, endpoint?: string): Promise<boolean> {
+  const cleanKey = (key || "").trim()
+  if (!cleanKey) {
     return false
   }
 
   // Check cache first
-  const cached = keyValidationCache.get(`nvidia:${key}`)
+  const cacheKey = `nvidia:${cleanKey}:${endpoint || 'default'}`
+  const cached = keyValidationCache.get(cacheKey)
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.valid
   }
 
   try {
-    const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+    const targetUrl = resolveNvidiaEndpoint(endpoint)
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${key}`,
+        'Authorization': `Bearer ${cleanKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -132,7 +136,7 @@ export async function validateNvidiaApiKey(key: string): Promise<boolean> {
         isValid = true
       }
     }
-    setCache(`nvidia:${key}`, isValid)
+    setCache(cacheKey, isValid)
     return isValid
   } catch (error) {
     logError('NVIDIA key validation error', { error })

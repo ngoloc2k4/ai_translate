@@ -114,7 +114,7 @@ export async function POST(req: NextRequest) {
       systemPrompt: prompt.system,
       userPrompt: prompt.user,
       temperature,
-      baseUrl: provider === "custom" ? baseUrl : undefined,
+      baseUrl: (provider === "custom" || provider === "nvidia") ? baseUrl : undefined,
     })
 
     const encoder = new TextEncoder()

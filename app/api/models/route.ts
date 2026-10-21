@@ -99,6 +99,7 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams
     const provider = searchParams.get("provider")
     const refresh = searchParams.get("refresh") === "true"
+    const baseUrlParam = searchParams.get("baseUrl")
     const clientKey =
       req.headers.get("x-api-key") ||
       req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
@@ -114,7 +115,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Return cached models if available and not requesting explicit refresh
-    const cacheKey = `${provider}:${clientKey ? 'custom' : 'default'}`
+    const cacheKey = `${provider}:${clientKey ? 'custom' : 'default'}:${baseUrlParam || 'default'}`
     const cached = modelsCache.get(cacheKey)
     if (!refresh && cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
       return NextResponse.json({ data: cached.models, cached: true })
@@ -189,7 +190,7 @@ export async function GET(req: NextRequest) {
       }
 
       case "nvidia": {
-        // NVIDIA NIM model catalog is completely public on integrate.api.nvidia.com
+        // NVIDIA NIM model catalog is public on integrate.api.nvidia.com or configurable via baseUrlParam
         const headers: Record<string, string> = {
           Accept: "application/json",
         }
@@ -197,13 +198,48 @@ export async function GET(req: NextRequest) {
           headers["Authorization"] = `Bearer ${apiKey}`
         }
 
-        const res = await fetch("https://integrate.api.nvidia.com/v1/models", { headers })
-        if (!res.ok) {
-          throw new Error(`NVIDIA models API returned ${res.status}`)
+        let nvidiaModelsUrl = "https://integrate.api.nvidia.com/v1/models"
+        if (baseUrlParam) {
+          let cleanBase = baseUrlParam.trim().replace(/\/+$/, "")
+          if (cleanBase.endsWith("/chat/completions")) {
+            cleanBase = cleanBase.slice(0, -"/chat/completions".length)
+          }
+          if (!cleanBase.endsWith("/v1")) {
+            cleanBase = `${cleanBase}/v1`
+          }
+          nvidiaModelsUrl = `${cleanBase}/models`
         }
 
-        const json = (await res.json()) as OpenAiModelsResponse
-        const rawModels = json.data || []
+        let rawModels: { id: string; name?: string }[] = []
+        try {
+          const res = await fetch(nvidiaModelsUrl, { headers })
+          if (res.ok) {
+            const json = (await res.json()) as OpenAiModelsResponse
+            rawModels = json.data || []
+          } else if (baseUrlParam) {
+            // Fall back to default nvidia models url if custom endpoint fails
+            const fallbackRes = await fetch("https://integrate.api.nvidia.com/v1/models", { headers })
+            if (fallbackRes.ok) {
+              const json = (await fallbackRes.json()) as OpenAiModelsResponse
+              rawModels = json.data || []
+            }
+          }
+        } catch (fetchErr) {
+          logError("NVIDIA models fetch failed", { error: fetchErr })
+        }
+
+        // Fallback lineup if models cannot be retrieved
+        if (rawModels.length === 0) {
+          rawModels = [
+            { id: "nvidia/llama-3.1-nemotron-70b-instruct" },
+            { id: "mistralai/mistral-large-2-instruct" },
+            { id: "deepseek-ai/deepseek-v4.1-flash" },
+            { id: "google/gemma-3-12b-it" },
+            { id: "nvidia/riva-translate-4b-instruct-v2" },
+            { id: "mistralai/mixtral-8x22b-v0.1" },
+            { id: "01-ai/yi-large" },
+          ]
+        }
 
         // Known EOL or deprecated models on integrate.api.nvidia.com
         const eolModels = [

@@ -1,7 +1,12 @@
 import { useState, useEffect, useCallback } from "react"
 import { SearchableSelectOption } from "@/components/ui/SearchableSelect"
 
-export function useDynamicModels(provider: string, clientKey: string, hasServerKey: boolean = false) {
+export function useDynamicModels(
+  provider: string, 
+  clientKey: string, 
+  hasServerKey: boolean = false,
+  baseUrl?: string
+) {
   const [models, setModels] = useState<SearchableSelectOption[]>([])
   const [isFetching, setIsFetching] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -16,7 +21,13 @@ export function useDynamicModels(provider: string, clientKey: string, hasServerK
     setIsFetching(true)
 
     try {
-      const url = `/api/models?provider=${encodeURIComponent(provider)}${bypassCache ? "&refresh=true" : ""}`
+      let url = `/api/models?provider=${encodeURIComponent(provider)}`
+      if (baseUrl) {
+        url += `&baseUrl=${encodeURIComponent(baseUrl)}`
+      }
+      if (bypassCache) {
+        url += `&refresh=true`
+      }
       const headers: Record<string, string> = {}
       if (clientKey) {
         headers["x-api-key"] = clientKey
@@ -37,7 +48,7 @@ export function useDynamicModels(provider: string, clientKey: string, hasServerK
     } finally {
       setIsFetching(false)
     }
-  }, [provider, clientKey])
+  }, [provider, clientKey, baseUrl])
 
   useEffect(() => {
     fetchModels()
